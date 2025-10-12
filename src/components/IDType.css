@@ -1,0 +1,91 @@
+.step-1 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #0F1738; /* Change background color for contrast */
+  }
+  
+  .step-1 h2 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #F7F7F7;
+    margin-bottom: 20px;
+    font-family: 'Montserrat';
+  }
+  .menu-id-type-label{
+    margin-top: 10px;
+    font-size: 18px;
+    color: #D4F0A3;
+    font-weight: 600;
+    font-family: 'Montserrat';
+    text-align: center;
+  }
+  .id-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 20px;
+    margin: 10px;
+  }
+  
+  .image-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid transparent;
+    background-color: #F7F7F7;
+    border-radius: 5px;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    width: 30%;  /* Ensure the images are the same width */
+  }
+  
+  .image-upload:hover {
+    border-color: #0F1738;  /* Highlight border on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .image-upload img {
+    width: 60%;
+    height: auto;
+    border-radius: 5px;
+    transition: opacity 0.3s ease;
+  }
+  
+  .image-upload.selected {
+    border-color: #0F1738;  /* Highlight the selected image */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  .image-upload img:hover {
+    opacity: 0.8;
+  }
+  
+  @media (max-width: 768px) {
+    .step-1 {
+      padding: 15px;
+    }
+  
+    .id-buttons {
+      /* flex-direction: column;
+      align-items: center; */
+      max-width: 100%;
+      gap: 10px;
+    }
+  
+    .image-upload {
+      width: 80%;  /* Adjust width on smaller screens */
+      margin-bottom: 15px;
+    }
+  
+    .step-1 h2 {
+      font-size: 20px;
+      font-family: 'Montserrat';
+    }
+  }
+  

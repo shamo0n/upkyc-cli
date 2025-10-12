@@ -1,0 +1,62 @@
+{
+  "AppName": "Pawtai",
+
+  "SplashScreen": "Splash Screen",
+
+  "LoginScreen": "Login Screen",
+  "LoginScreenHeaderText": "Login",
+  "LoginTextWelcomeBack": "Welcome Back!",
+  "LoginTextForgetPassword": "Forget Password?",
+  "LoginTextPleaseLogin": "Please, Log In.",
+  "LoginInputPlaceholderPhone": "Phone Number",
+  "LoginInputPlaceholderPassword": "Password",
+  "LoginButtonLogin": "Login",
+  "LoginButtonSignup": "Create an Account",
+  "LoginTextOr": "Or",
+
+  "HomeScreen": "Home Screen",
+  "HomeScreenHeaderText": "Home",
+
+  "SignupScreen": "Signup Screen",
+  "SignupScreenHeaderText": "Signup",
+  "SignupTextWelcome": "Welcome to Pawtai!",
+  "SignupTextPleaseSignup": "Sign Up Here.",
+  "SignupInputPlaceholderUsername": "Username*",
+  "SignupInputPlaceholderEmail": "Email",
+  "SignupInputPlaceholderPassword": "Password*",
+  "SignupButtonLogin": "Already Have an Account",
+  "SignupButtonSignup": "Signup",
+
+  "WelcomeLabel": "Register Your Account",
+  "WelcomeTitle": "Free Registeration",
+  "WelcomeButtonNext": "Next",
+  "WelcomeButtonGetStarted": "Get Started",
+  "WelcomeTextJoinPotai": "Add or Join a Pawtai",
+  "WelcomeTextCreatYourPawtai": "Create Your Pawtai",
+  "WelcomeTextAddActivity": "Add Activity of Your Pet",
+  "WelcomeTextRecordActivity": "Record Activity",
+
+  "ForgetPasswordTextForgetYourPassword": "Forget Your Password?",
+  "ForgetPasswordTextResetHere": "Reset Here.",
+  "ForgetPasswordTextEmail": "Email*",
+  "ForgetPasswordButtonSendResetLink": "Send Reset Link",
+
+  "AddPawtaiTextAddAPawtai": "Add a Pawtai.",
+  "AddPawtaiTextNewPawtai": "Create a new Pawtai for others to join!",
+  "AddPawtaiInputPetName": "Pet Name*",
+  "AddPawtaiButtonGetStarted": "Get Started",
+  "AddPawtaiButtonJoinPawtai": "Join a Pawtai",
+  "AddPawtaiGalleryText1": "Upload or Take ",
+  "AddPawtaiGalleryText2": "a Photo",
+
+  "JoinPawtaiTextTitle": "Join a Pawtai.",
+  "JoinPawtaiTextDescription": "Already have a code? Join an existing Pawtai",
+  "JoinPawtaiInputPetNameLabel": "Pet Code*",
+  "JoinPawtaiButtonGetStarted": "Get Started",
+  "JoinPawtaiButtonAddPawtai": "Add a Pawtai",
+
+  "VerifyPawtaiTextTitle": "Verify a Pawtai.",
+  "VerifyPawtaiTextDescription": "Is this the correct Pawtai you want to join?",
+  "VerifyPawtaiButtonJoin": "Yes! Join It.",
+  "VerifyPawtaiButtonDontJoin": "No! Don't Join,"
+}

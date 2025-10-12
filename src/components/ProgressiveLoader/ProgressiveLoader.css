@@ -1,0 +1,26 @@
+/* Centering the loader on the screen with overlay */
+.loading-container {
+    position: fixed; /* Fixes the loader on the screen */
+    top: 50%; /* Vertically centers the loader */
+    left: 50%; /* Horizontally centers the loader */
+    transform: translate(-50%, -50%); /* Adjusts for the exact center */
+    width: 80px; /* Size of the circle */
+    height: 80px; /* Same as width for a perfect circle */
+    border-radius: 50%; /* Makes it a circle */
+    border: 8px solid transparent; /* Outer ring is transparent initially */
+    border-top: 8px solid #00e1ff; /* The color of the rotating ring */
+    animation: spin 1.5s linear infinite; /* Animation for rotating the ring */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow behind the loader */
+    z-index: 9999; /* Ensures it's on top of other elements */
+  }
+  
+  /* Ring rotation animation */
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg); /* Starts from 0 degrees */
+    }
+    100% {
+      transform: rotate(360deg); /* Full rotation */
+    }
+  }
+  

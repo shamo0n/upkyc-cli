@@ -1,0 +1,69 @@
+.custom-alert {
+  position: fixed; /* Fix the alert in place */
+  top: 50%; /* Center vertically */
+  left: 50%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust for exact centering */
+  z-index: 9999; /* Ensure it's on top of all other elements */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 500px;
+  padding: 30px;
+  border-radius: 15px; /* Rounded corners */
+  background-image: linear-gradient(to top, #F7F7F7, rgba(255, 255, 255, 0.8)); /* Glossy gradient */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+  text-align: center;
+  font-family: "Roboto", sans-serif;
+  animation: fade-in 0.3s ease, slide-down 0.4s ease; /* Smooth animations */
+  overflow: hidden; /* Prevents content from overflowing */
+}
+
+/* Icon container for styling */
+.custom-alert .icon {
+  background-color: #007bff; /* Blue background for the icon */
+  color: #F7F7F7; /* White checkmark or cross */
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for icon */
+}
+
+/* Title styling */
+.custom-alert .title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #333333; /* Dark text for better contrast */
+}
+
+/* Description styling */
+.custom-alert .description {
+  font-size: 16px;
+  color: #666666; /* Lighter gray text */
+  line-height: 1.5;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translate(-50%, -60%);
+  }
+  to {
+    transform: translate(-50%, -50%);
+  }
+}

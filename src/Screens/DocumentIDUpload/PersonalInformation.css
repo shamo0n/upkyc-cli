@@ -1,0 +1,493 @@
+/* Signup Page - Full Height Layout */
+.personalinfo-container {
+  height: 100vh;
+  width: 100vw; /* ensure it spans full screen */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-image: url('../../assets/images/mobilebg.jpg');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed; /* helps with large screen backgrounds */
+
+  font-family: "Montserrat", sans-serif;
+  padding: 20px;
+  overflow: hidden; /* prevent scrollbars if not needed */
+}
+.Pers-form-sty{
+  overflow-y: auto;
+  max-height: 500px;
+  padding: 20px;
+}
+
+.Signup-page__content {
+  /* display: flex;
+  height: 70%;
+  width: 80%;
+  background-color: #0F1738;
+  border-radius: 40px;
+  overflow: hidden; */
+}
+.cancelbtn{
+    background-color: #0F1738;
+    color: #ffffff;
+  border-color: #F7F7F7;
+}
+.nextbtn{
+  background-color: #B1E94F;
+  color: #0F1738;
+border-color: #B1E94F;
+}
+.Intro-page__description {
+  font-size: 16px;
+  color: #F7F7F7;
+  margin-bottom: 20px;
+}
+
+.Intro-page__steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.Intro-page__container {
+  justify-content: space-around;
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    /* margin: 5px; */
+    /* margin: 20px */
+}
+.Intro-page__steplabel {
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+  justify-content: center; /* Center content horizontally */
+  gap: 10px; /* Add spacing between the number and the text */
+  margin-top: 15px;
+}
+
+.Intro-page__step-number {
+  font-size: 14px;
+  font-weight: bold;
+  color: #0f172a;
+  background-color: #B1E94F;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  align-content: center;
+  text-align: center;
+}
+.headerbtn-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.Intro-page__arrow {
+  font-size: 24px;
+  color: #0f172a; /* Navy color */
+  margin: 0 10px; /* Space around the arrow */
+  align-self: center; /* Vertically align arrows with steps */
+}
+.Intro-page__step-arrow-icon{
+  width: 94px;
+}
+.Intro-page__step-text {
+  font-size: 16px; /* Adjust the size as needed */
+  color: #F7F7F7;
+}
+
+.Intro-page__step {
+  /* flex: 1; */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background-color: #F7F7F7;
+}
+
+.Intro-page__step-icon {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 5px;
+}
+
+.Intro-page__start-button {
+  background-color: #66ae7b;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Bottom Section */
+.Personal-page__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: auto;
+  margin-top: 150px;
+  background-color: #0F1738;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  /* box-shadow: 0 0 20px 15px rgba(0, 114, 255, 0.2); */
+  overflow: hidden;
+}
+
+/* Form Container */
+.Personal-page__form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #0F1738;
+}
+
+/* Form Title & Description */
+.Signup-page__form-title {
+  font-size: clamp(24px, 3vw, 30px);
+  /* margin-bottom: 150px; */
+  color: #F7F7F7;
+  /* margin-bottom: 150px; */
+  text-align: center;
+}
+
+.Signup-page__form-description {
+  font-size: clamp(14px, 2vw, 18px);
+  color: #F7F7F7;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Form Styling */
+.Signup-page__form {
+  width: 80%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Input Fields */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  color: #F7F7F7;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.form-input {
+  padding: 10px;
+  width: 350px;
+  height: 50px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+
+.step-images {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.step-image {
+  text-align: center;
+}
+
+.step-image img {
+  max-width: 100px;  /* Adjust this to fit your design */
+  margin-bottom: 10px;
+}
+
+.step-image p {
+  font-size: 14px;
+  color: #666;
+}
+
+
+
+/* Progress Steps */
+.steps-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+  gap: 15px; /* Increased spacing */
+}
+
+.step-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Increased gap for better spacing */
+}
+
+.step-logo {
+  width: 80px; /* Increased size */
+  height: 80px;
+  border-radius: 50%;
+  background-color: #F7F7F7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  */
+}
+
+.step-logo img {
+  width: 55px; /* Increased size */
+  height: 40px;
+}
+
+.arrow {
+  width: 70px; /* Increased size */
+  align-self: center;
+}
+
+.step-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.step-number {
+  width: 40px; /* Increased size */
+  height: 40px;
+  background-color: #F7F7F7;
+  color: #0F1738;
+  font-size: 18px; /* Increased font size */
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 3px solid #0F1738; /* Added a border for emphasis */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.step-label {
+  font-size: 16px; /* Increased size */
+  font-weight: bold; /* Made it bold */
+  color: #F7F7F7;
+  text-transform: uppercase; /* Uppercase for stronger impact */
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.step-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #8F8E8E;
+  font-size: large;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.step-circle.active {
+  background-color: #B1E94F;
+  color: #0F1738;
+}
+
+.step-line {
+  width: 30%;
+  height: 2px;
+  background-color: #8F8E8E;
+}
+
+.step-line.active {
+  background-color: #F7F7F7;
+}
+
+
+.step-images {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.step-image {
+  width: 80px; /* Increased size */
+  height: 80px;
+  border-radius: 50%;
+  background-color: #F7F7F7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+}
+
+.step-image img {
+  max-width: 100px;  /* Adjust this to fit your design */
+  margin-bottom: 10px;
+}
+.Intro-page__start_icon{
+  width: 28px;
+  height: 19px;
+  margin-right: 10px;
+}
+  .step-image p {
+  font-size: 14px;
+  color: #666;
+}
+.buttons{
+  padding: inherit;
+}
+
+/* Responsive Design for Steps */
+@media (max-width: 1024px) {
+  .Intro-page__steps {
+    gap: 20px;
+    flex-direction: row; /* Keep steps aligned in a row for medium-sized screens */
+    /* width: auto; */
+  }
+
+  .Intro-page__step {
+    width: 90px;
+    height: 90px;
+    font-size: 14px;
+  }
+
+  .Intro-page__step-number {
+    font-size: 14px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .Intro-page__step-text {
+    font-size: 14px;
+  }
+
+  .Intro-page__step-arrow-icon {
+    width: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .Personal-page__content{
+
+  }
+  .Intro-page__steps {
+    gap: 15px;
+    flex-direction: row;
+    justify-content: center; /* Center steps on small screens */
+    /* width: auto; */
+  }
+
+  .Intro-page__step {
+    width: 75px;
+    height: 75px;
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .Intro-page__step-number {
+    font-size: 12px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .Intro-page__step-text {
+    font-size: 8px;
+  }
+
+  .Intro-page__step-arrow-icon {
+    width: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .personalinfo-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('../../assets/images/mobilebg.jpg') no-repeat center center;
+    background-size: cover;
+    padding: 3px;
+  }
+  .Intro-page__steps {
+    gap: 10px;
+    flex-direction: row;
+    justify-content: center; /* Center steps on mobile */
+    /* width: auto; */
+  }
+
+  .Intro-page__step {
+    /* width: 60px; */
+    width: fit-content;
+    height: 60px;
+    font-size: 10px;
+    padding: 6px;
+  }
+
+  .Intro-page__step-number {
+    font-size: 10px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .Intro-page__step-text {
+    font-size: 8px;
+  }
+
+  .Intro-page__step-arrow-icon {
+    width: 40px;
+  }
+}
+
+@media (max-width: 385px) {
+  .Intro-page__steps {
+           /* gap: 5px; */
+           flex-direction: row;
+           justify-content: normal;
+           width: 40vh;
+  }
+
+  .Intro-page__step {
+    width: 50px;
+    height: 50px;
+    font-size: 8px;
+    padding: 4px;
+  }
+
+  .Intro-page__step-number {
+    font-size: 8px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .Intro-page__step-text {
+    font-size: 7px;
+  }
+
+  .Intro-page__step-arrow-icon {
+    width: 30px;
+  }
+}
+

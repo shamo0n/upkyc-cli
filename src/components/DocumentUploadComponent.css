@@ -1,0 +1,162 @@
+/* Step 3: Upload Document Styling */
+.step-3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #0F1738; /* Matching background color */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.step-3 h2 {
+  font-size: 28px;
+  font-weight: bold;
+  color: #F7F7F7;
+  margin-bottom: 20px;
+  font-family: 'Montserrat', sans-serif;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Form Group Styling */
+.form-group {
+  width: 100%;
+  max-width: 500px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  color: #F7F7F7;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.form-group select,
+.form-group input[type="text"] {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  font-family: 'Montserrat', sans-serif;
+  background-color: #F7F7F7;
+  width: 100%;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+.file-info{
+  color: #F7F7F7;
+
+}
+.form-group select:focus,
+.form-group input[type="text"]:focus {
+  border-color: #66AE7B;
+  box-shadow: 0 0 5px rgba(102, 174, 123, 0.5);
+  outline: none;
+}
+
+/* File Upload Box */
+.file-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 20px;
+  border: 2px dashed #66AE7B;
+  background-color: #F7F7F7;
+  border-radius: 5px;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.file-upload-box:hover {
+  border-color: #0056b3;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.file-upload-box input {
+  display: none; /* Hide default file input */
+}
+
+.file-upload-box p {
+  font-size: 16px;
+  color: #333;
+  margin-top: 10px;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* File upload status */
+.placeholder-text {
+  color: #888;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Submit Button */
+.submit-button {
+  width: 100%;
+  max-width: 500px;
+  padding: 12px;
+  background: #66AE7B;
+  color: #FFF;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+  margin-top: 20px;
+}
+
+.submit-button:hover {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.submit-button:active {
+  transform: scale(1);
+}
+.form-file-input{
+  color: #F7F7F7;
+}
+/* Responsive Design */
+@media (max-width: 768px) {
+  .step-3 {
+    padding: 15px;
+  }
+
+  .form-group {
+    max-width: 100%;
+  }
+
+  .submit-button {
+    width: 100%;
+  }
+
+  .step-3 h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .file-upload-box {
+    padding: 15px;
+  }
+
+  .form-group input[type="date"] {
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="%23888888"><path d="M19 3h-1V1h-2v2H8V1H6v2H5a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 18H5V10h14zm0-12H5V5h14zm-9 10h5v-2h-5zm0-4h5v-2h-5z"/></svg>')
+      no-repeat right 10px center;
+    border: 2px solid transparent;
+    border-radius: 5px;
+    font-size: 16px;
+    font-family: 'Montserrat', sans-serif;
+    background-color: #F7F7F7;
+    transition: border 0.3s ease, box-shadow 0.3s ease;
+  }
+}
