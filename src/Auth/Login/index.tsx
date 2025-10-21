@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { TouchableOpacity, Platform } from 'react-native';
+import { TouchableOpacity, Platform, KeyboardAvoidingView } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { AuthContext } from '../../Contexts/AuthContext';
@@ -21,6 +21,8 @@ import {
   Background,
   LoginBoxContainer,
 } from './style';
+import AnimatedButton from '../../components/StyledButton';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 type RootStackParamList = {
   Login: undefined;
@@ -165,42 +167,58 @@ const Login: React.FC = () => {
     }
   };
   return (
-    <Background source={require('../../Assets/images/mobilebg.jpg')}>
-      <Container>
-        <LoginBoxContainer>
-          <Logo source={require('../../Assets/images/up-logo.png')} />
-          <Title>Get Started</Title>
-          <Subtitle>
-            Enter your email to begin onboarding or continue where you left off
-          </Subtitle>
-          <InputContainer>
-            <Input
-              value={email}
-              placeholder="Email Address"
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              onChangeText={handleEmailChange}
-            />
-            {suggestions.length > 0 && (
-              <Suggestions>
-                {suggestions.map((s, i) => (
-                  <TouchableOpacity key={i} onPress={() => setEmail(s)}>
-                    <SuggestionText>{s}</SuggestionText>
-                  </TouchableOpacity>
-                ))}
-              </Suggestions>
-            )}
-          </InputContainer>
-          {errorMessage ? <ErrorText>{errorMessage}</ErrorText> : null}
-          <Button
-            onPress={handleSignup}
-            // onPress={() => navigation.navigate('KycProcessScreen')}
-            disabled={loading}
-          >
-            {loading ? <Loader /> : <ButtonText>Begin</ButtonText>}
-          </Button>
-        </LoginBoxContainer>
-      </Container>
-    </Background>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
+    >
+      <Background
+        source={require('../../Assets/images/mobilebg.jpg')}
+        resizeMode="cover"
+      >
+        {loading && <LoadingSpinner />}
+
+        <Container
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            flexGrow: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <LoginBoxContainer>
+            <Logo source={require('../../Assets/images/up-logo.png')} />
+            <Title>Get Started</Title>
+            <Subtitle>
+              Enter your email to begin onboarding or continue where you left
+              off
+            </Subtitle>
+
+            <InputContainer>
+              <Input
+                value={email}
+                placeholder="Email Address"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                onChangeText={handleEmailChange}
+              />
+              {suggestions.length > 0 && (
+                <Suggestions>
+                  {suggestions.map((s, i) => (
+                    <TouchableOpacity key={i} onPress={() => setEmail(s)}>
+                      <SuggestionText>{s}</SuggestionText>
+                    </TouchableOpacity>
+                  ))}
+                </Suggestions>
+              )}
+            </InputContainer>
+
+            {errorMessage ? <ErrorText>{errorMessage}</ErrorText> : null}
+            <AnimatedButton title="Begin" onPress={handleSignup} />
+          </LoginBoxContainer>
+        </Container>
+      </Background>
+    </KeyboardAvoidingView>
   );
 };
 

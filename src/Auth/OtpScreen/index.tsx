@@ -68,7 +68,7 @@ const OtpScreen: React.FC = () => {
   const handleOtpSubmit = () => {
     console.log('--- handleOtpSubmit START ---');
     setErrorMessage('');
-
+    setLoading(true);
     if (!authUser) {
       Toast.show({
         type: 'error',
@@ -272,6 +272,7 @@ const OtpScreen: React.FC = () => {
 
   return (
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
+      {loading && <LoadingSpinner />}
       <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
       <Container>
         <LoginBoxContainer>

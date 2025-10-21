@@ -6,7 +6,11 @@ import {
   IdButton,
   ButtonLabel,
 } from './style';
-
+import {
+  DrivingLicenseIcon,
+  IdCardIcon,
+  PassportIcon,
+} from '../../Assets/images/SVG';
 
 const IDTypeComponent = ({ onSelect }) => {
   const [selectedType, setSelectedType] = useState(null);
@@ -15,13 +19,16 @@ const IDTypeComponent = ({ onSelect }) => {
     setSelectedType(type);
     onSelect(type);
   };
-
+  const icons = {
+    'id-card': IdCardIcon,
+    'driving-license': DrivingLicenseIcon,
+    passport: PassportIcon,
+  };
   const buttons = [
     { type: 'id-card', label: 'ID Card' },
     { type: 'driving-license', label: 'License' },
     { type: 'passport', label: 'Passport' },
   ];
-
   return (
     <StepContainer>
       <Title>ID Type?</Title>
@@ -29,6 +36,8 @@ const IDTypeComponent = ({ onSelect }) => {
 
       <ButtonRow>
         {buttons.map(({ type, label }) => {
+          const Icon = icons[type];
+
           return (
             <IdButton
               key={type}
@@ -36,6 +45,14 @@ const IDTypeComponent = ({ onSelect }) => {
               onPress={() => handleSelectType(type)}
             >
               {/* Render the correct icon */}
+              {Icon && (
+                <Icon
+                  width={40}
+                  height={40}
+                  fill={selectedType ? '#E0F2F1' : '#CFD8DC'}
+                />
+              )}
+
               <ButtonLabel selected={selectedType === type}>
                 {label}
               </ButtonLabel>

@@ -42,7 +42,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-console.log('FUCK*****profilePic',profilePic)
+  console.log('FUCK*****profilePic', profilePic);
   if (!profilePic) {
     return (
       <HeaderContainer>
@@ -52,10 +52,18 @@ console.log('FUCK*****profilePic',profilePic)
       </HeaderContainer>
     );
   }
+  const isUrl =
+    profilePic.startsWith('http://') || profilePic.startsWith('https://');
 
   return (
     <>
-      <ProfileImage source={{ uri: `data:image/jpeg;base64,${profilePic}` }} />
+      <ProfileImage
+        source={
+          isUrl
+            ? { uri: profilePic }
+            : { uri: `data:image/jpeg;base64,${profilePic}` }
+        }
+      />
       <ProfileName>{fullName}</ProfileName>
     </>
   );

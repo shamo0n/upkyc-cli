@@ -147,7 +147,7 @@ const KycProcessScreen: React.FC = () => {
     setKycData(updated);
   };
 
-  if (loading) return <LoadingSpinner />;
+  // if (loading) return <LoadingSpinner />;
 
   const totalQuestions = kycData.length;
   const countYes = kycData.filter(q => q.ANSWR === 'YES').length;
@@ -157,6 +157,7 @@ const KycProcessScreen: React.FC = () => {
   return (
     <>
       <Container source={require('../../Assets/images/mobilebg.jpg')}>
+        {loading && <LoadingSpinner />}
         <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
 
         <KycBox>
@@ -191,12 +192,12 @@ const KycProcessScreen: React.FC = () => {
               />
             ))}
           </ScrollView>
-          {!customerProfile.isKYC_Eval && (
+          {!customerProfile?.isKYC_Eval && (
             <ButtonRow>
               r
               <BackButton
                 onPress={() =>
-                  navigation.navigate('ProfileScreen', { statusId: undefined })
+                  navigation.navigate('Dashboard', { statusId: undefined })
                 }
               >
                 <ButtonText>Skip</ButtonText>

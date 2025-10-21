@@ -16,7 +16,7 @@ import {
   DateText,
   PickerWrapper,
 } from './style';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 interface Props {
   formData: any;
@@ -192,9 +192,15 @@ const PersonalInformationForm: React.FC<Props> = ({
               borderWidth: 0,
               elevation: 0,
               shadowOpacity: 0,
+              borderColor: '#fff',
+              zIndex: 6000,
+              ...(Platform.OS === 'android' && { marginTop: 4 }),
+            }}
+            arrowIconStyle={{
+              tintColor: '#fff', // your color
             }}
             textStyle={{
-              // color: '#fff',
+              color: '#fff',
               fontSize: 16,
             }}
             searchTextInputStyle={{
@@ -203,7 +209,10 @@ const PersonalInformationForm: React.FC<Props> = ({
               borderWidth: 0,
             }}
             placeholderStyle={{
-              color: '#ccc',
+              color: '#fff',
+            }}
+            listItemLabelStyle={{
+              color: '#355042',
             }}
             listItemContainerStyle={{
               backgroundColor: 'transparent',
@@ -269,9 +278,15 @@ const PersonalInformationForm: React.FC<Props> = ({
               borderWidth: 0,
               elevation: 0,
               shadowOpacity: 0,
+              borderColor: '#fff',
+              zIndex: 6000,
+              ...(Platform.OS === 'android' && { marginTop: 4 }),
+            }}
+            arrowIconStyle={{
+              tintColor: '#fff', // your color
             }}
             textStyle={{
-              // color: '#fff',
+              color: '#fff',
               fontSize: 16,
             }}
             searchTextInputStyle={{
@@ -280,7 +295,10 @@ const PersonalInformationForm: React.FC<Props> = ({
               borderWidth: 0,
             }}
             placeholderStyle={{
-              color: '#ccc',
+              color: '#fff',
+            }}
+            listItemLabelStyle={{
+              color: '#355042',
             }}
             listItemContainerStyle={{
               backgroundColor: 'transparent',

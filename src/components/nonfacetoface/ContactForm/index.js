@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Row, InputGroup, Label, StyledTextInput, ErrorText } from './style';
 
 const ContactForm = ({ formData, setFormData, email }) => {
@@ -37,7 +37,7 @@ const ContactForm = ({ formData, setFormData, email }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+    <View contentContainerStyle={{ paddingBottom: 50 }}>
       <InputGroup>
         <Label>Mobile Number</Label>
         <StyledTextInput
@@ -62,7 +62,7 @@ const ContactForm = ({ formData, setFormData, email }) => {
           onChangeText={text => setFormData({ ...formData, email: text })}
         />
       </InputGroup>
-    </ScrollView>
+    </View>
   );
 };
 

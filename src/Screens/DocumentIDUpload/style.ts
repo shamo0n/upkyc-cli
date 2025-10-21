@@ -13,6 +13,16 @@ export const Container = styled(View)`
   justify-content: center;
   align-items: center;
 `;
+
+export const Box = styled.View`
+  width: 0%;
+  max-width: 526px;
+  padding: 32px 24px;
+  background-color: rgba(42, 71, 56, 0.82);
+  border-radius: 12px;
+  align-items: center;
+  justify-content: flex-start;
+`;
 // Inner form container
 export const FormContainer = styled(View)`
   border-radius: 20px;

@@ -30,6 +30,8 @@ import {
   UpdatePersonalInfoAPI,
 } from '../../Helpers/API';
 import ProgressLoadbar from '../../components/ProgressLoadbar';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import AppHeader from '../../components/AppHeader';
 
 type FormDataType = {
   firstName?: string;
@@ -273,32 +275,26 @@ const PersonalInformationScreen = () => {
       });
     });
   };
-
   const handleImageUpload = async (
     imageType: 'idFront' | 'idBack' | 'selfie',
-    data: { uri: string; base64?: string },
+    data: { uri: string; base64: string },
     faceData?: FaceData,
   ) => {
-    console.log('Type:', imageType);
-    console.log('URI:', data.uri);
-    console.log('Base64:', data.base64);
+    console.log('Uploading type:', imageType);
 
     try {
       setLoading(true);
       if (!idType) throw new Error('ID type not selected');
 
+      // Update identification info before upload
       await handleUpdateIdentificationInfoAPI(idType);
+      if (!data.base64) throw new Error('Base64 data missing');
 
-      // Save base64 to formData
-      setFormData(prev => ({ ...prev, [imageType]: data.base64 }));
-
-      // Clean the base64 string for API
-      const cleanBase64 = data.base64?.replace(
+      // Prepare upload body
+      const cleanBase64 = data.base64.replace(
         /^data:image\/[a-z]+;base64,/,
         '',
       );
-      if (!cleanBase64) throw new Error('Base64 data is missing');
-
       const body: any = {
         IDTypeID:
           imageType === 'idFront' ? 97 : imageType === 'idBack' ? 98 : 99,
@@ -323,6 +319,7 @@ const PersonalInformationScreen = () => {
         MatchPercentage: faceData?.score,
       };
 
+      console.log('Uploading to backend...');
       SaveSignupDocumentAPI(body, (response: any) => {
         const children = response?.responseBody?.children || [];
         const messageCode = children.find(
@@ -332,19 +329,110 @@ const PersonalInformationScreen = () => {
           children.find((c: any) => c.name === 'Message')?.value || '';
 
         if (messageCode === '2') {
-          showToast(message || `${imageType} uploaded successfully`);
-          if (imageType === 'selfie') setIsUploadSuccessful(true);
+          Toast.show({
+            type: 'success',
+            text1:
+              message ||
+              (imageType === 'idFront'
+                ? 'ID Front uploaded successfully'
+                : imageType === 'idBack'
+                ? 'ID Back uploaded successfully'
+                : 'Selfie uploaded successfully'),
+          });
+          if (imageType === 'selfie') {
+            setIsUploadSuccessful(true);
+            setCurrentStep(prevStep => prevStep + 1);
+          }
         } else {
           throw new Error(message || 'Upload failed');
         }
+        //   if (imageType === 'selfie') setIsUploadSuccessful(true);
+        // } else {
+        //   throw new Error(message || 'Upload failed');
+        // }
       });
     } catch (err: any) {
-      console.error(err);
-      showToast(err?.message || 'Upload failed');
+      console.error('handleImageUpload error:', err);
+      Toast.show({
+        type: 'error',
+        text1: err?.message || 'Upload failed',
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // const handleImageUpload = async (
+  //   imageType: 'idFront' | 'idBack' | 'selfie',
+  //   data: { uri: string; base64?: string },
+  //   faceData?: FaceData,
+  // ) => {
+  //   console.log('Type:', imageType);
+  //   console.log('URI:', data.uri);
+  //   console.log('Base64:', data.base64);
+
+  //   try {
+  //     setLoading(true);
+  //     if (!idType) throw new Error('ID type not selected');
+
+  //     await handleUpdateIdentificationInfoAPI(idType);
+
+  //     // Save base64 to formData
+  //     setFormData(prev => ({ ...prev, [imageType]: data.base64 }));
+
+  //     // Clean the base64 string for API
+  //     const cleanBase64 = data.base64?.replace(
+  //       /^data:image\/[a-z]+;base64,/,
+  //       '',
+  //     );
+  //     if (!cleanBase64) throw new Error('Base64 data is missing');
+
+  //     const body: any = {
+  //       IDTypeID:
+  //         imageType === 'idFront' ? 97 : imageType === 'idBack' ? 98 : 99,
+  //       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
+  //       Email: authUser?.Email,
+  //       Doccument_type: imageType === 'selfie' ? 'selfie' : 'idcard',
+  //       Document_NO: '',
+  //       Document_issue_Date: '',
+  //       Document_expiry_Date: '',
+  //       doc_name:
+  //         imageType === 'idFront'
+  //           ? 'idfront.png'
+  //           : imageType === 'idBack'
+  //           ? 'idback.png'
+  //           : 'selfie.png',
+  //       doc_Base64: cleanBase64,
+  //       remarks: 'uploaded from digital onboarding',
+  //       doc_MASTER_DETAILS:
+  //         imageType === 'selfie' ? 'Selfie Image' : `ID ${imageType} image`,
+  //       livenessScore: faceData?.liveness?.score,
+  //       livenessResult: faceData?.liveness?.result,
+  //       MatchPercentage: faceData?.score,
+  //     };
+
+  //     SaveSignupDocumentAPI(body, (response: any) => {
+  //       const children = response?.responseBody?.children || [];
+  //       const messageCode = children.find(
+  //         (c: any) => c.name === 'MessageCode',
+  //       )?.value;
+  //       const message =
+  //         children.find((c: any) => c.name === 'Message')?.value || '';
+
+  //       if (messageCode === '2') {
+  //         showToast(message || `${imageType} uploaded successfully`);
+  //         if (imageType === 'selfie') setIsUploadSuccessful(true);
+  //       } else {
+  //         throw new Error(message || 'Upload failed');
+  //       }
+  //     });
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     showToast(err?.message || 'Upload failed');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleProofOfDocumentUpload = async (
     base64Data?: string,
     imageType?: string,
@@ -460,7 +548,6 @@ const PersonalInformationScreen = () => {
   // Cancel button: reset form and go to Login screen
   const handleCancel = () => {
     navigation.navigate('Login'); // Navigate to Login screen
-    setIsKYCFlow(true); // Reset KYC Flow
     setCurrentStep(1); // Start from first step
     setFormData({
       firstName: '',
@@ -536,7 +623,11 @@ const PersonalInformationScreen = () => {
   // ===================== RENDER =====================
   return (
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
+      {loading && <LoadingSpinner />}
+
       <Container>
+        <AppHeader showBack={true} onBackPress={handleBack} />
+
         {showProgressBar && <ProgressLoadbar label={progressLabel} />}
         <ScrollView
           contentContainerStyle={{
@@ -547,9 +638,9 @@ const PersonalInformationScreen = () => {
             paddingBottom: 40,
           }}
         >
-          <BackButton onPress={handleBack}>
+          {/* <BackButton onPress={handleBack}>
             <ButtonText>Back</ButtonText>
-          </BackButton>
+          </BackButton> */}
 
           <Box style={{ width: '100%', alignSelf: 'center' }}>
             {currentStep === 1 && (

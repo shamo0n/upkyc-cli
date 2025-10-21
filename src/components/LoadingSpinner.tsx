@@ -14,7 +14,7 @@ const LoadingSpinner: React.FC = () => {
         toValue: 1,
         duration: 1500,
         useNativeDriver: true,
-      })
+      }),
     ).start();
   }, [spinValue]);
 
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     left: 0,
     width,
     height,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,

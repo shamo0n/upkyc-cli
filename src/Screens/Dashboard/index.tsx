@@ -10,7 +10,12 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  RouteProp,
+  CommonActions,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
 
@@ -38,6 +43,7 @@ import {
   IdCardIcon,
   KycIcon,
   OnnboardingIcon,
+  ProfileViewIcon,
 } from '../../Assets/images/SVG';
 import SideMenu from '../../components/SideMenu';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -123,6 +129,7 @@ const Dashboard: React.FC = () => {
         LastName: extractValue('LAST_NAME'),
         Email: extractValue('EMAIL'),
         StatusID: extractValue('StatusID'),
+        IdTypeID: extractValue('IdTypeID'),
         isKYC_Eval: extractValue('isKYC_Eval'),
         iscaseRejected: extractValue('iscaseRejected'),
         SELFIE_URL: extractValue('SELFIE_URL'),
@@ -146,21 +153,35 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await logout();
-          } catch (error) {
-            console.log('Logout failed:', error);
-          }
+  const handleLogout = async () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Get logout function and navigation
+
+              await logout(); // Clear auth/session
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }], // replace with your login screen
+                }),
+              );
+            } catch (error) {
+              console.log('Logout failed:', error);
+              Alert.alert('Error', 'Logout failed. Please try again.');
+            }
+          },
         },
-      },
-    ]);
+      ],
+      { cancelable: true },
+    );
   };
   const handleProfileClick = () => {
     if (!customerProfile || Object.keys(customerProfile).length === 0) {
@@ -169,12 +190,15 @@ const Dashboard: React.FC = () => {
     }
 
     navigation.navigate('ProfileScreen', {
-      statusId: customerProfile.StatusID || 'default',
+      statusId: customerProfile?.StatusID || 'default',
     });
   };
 
   const handleKycClick = () => {
-    if (customerProfile.StatusID === '3' || customerProfile.StatusID === '2') {
+    if (
+      customerProfile?.StatusID === '3' ||
+      customerProfile?.StatusID === '2'
+    ) {
       Toast.show({
         type: 'error',
         text1: 'Profile inactive. Wait for verification.',
@@ -185,7 +209,10 @@ const Dashboard: React.FC = () => {
   };
   const handleSupportClick = () => {
     // Optionally, you can check some profile status if needed
-    if (customerProfile.StatusID === '3' || customerProfile.StatusID === '2') {
+    if (
+      customerProfile?.StatusID === '3' ||
+      customerProfile?.StatusID === '2'
+    ) {
       Toast.show({
         type: 'error',
         text1: 'Profile inactive. Wait for verification.',
@@ -193,7 +220,7 @@ const Dashboard: React.FC = () => {
     } else {
       // Navigate to SupportScreen
       navigation.navigate('SupportScreen', {
-        statusId: customerProfile.StatusID,
+        statusId: customerProfile?.StatusID,
       });
     }
 
@@ -202,26 +229,30 @@ const Dashboard: React.FC = () => {
   };
 
   const handleCamloClick = () => {
-    if (customerProfile.StatusID === '3' || customerProfile.StatusID === '2') {
+    if (
+      customerProfile?.StatusID === '3' ||
+      customerProfile?.StatusID === '2'
+    ) {
       Toast.show({ text1: 'CAMLO review pending.' });
     } else {
       Toast.show({ type: 'success', text1: 'CAMLO review completed.' });
     }
   };
   const handleOnboardingClick = () => {
-    const isMatchValid = customerProfile.MatchConfidence > 0.8;
+    const isMatchValid = customerProfile?.MatchConfidence > 0.8;
     const isLivenessValid =
-      customerProfile.livenessResult === 'real' &&
-      customerProfile.livenessScore > 0.8;
+      customerProfile?.livenessResult === 'real' &&
+      customerProfile?.livenessScore > 0.8;
 
     if (isMatchValid && isLivenessValid) {
       Toast.show({ type: 'success', text1: 'Onboarding completed.' });
     } else {
+      console.log('customerProfile?.IdTypeID @from DASHBOARD', customerProfile);
       navigation.navigate('DocumentIDUpload', {
         step: 5,
-        idType: customerProfile.IdTypeID || undefined,
-        idFront: customerProfile.ID_FRONT_URL || undefined,
-        idBack: customerProfile.ID_BACK_URL || undefined,
+        idType: customerProfile?.IdTypeID,
+        idFront: customerProfile?.ID_FRONT_URL,
+        idBack: customerProfile?.ID_BACK_URL,
       });
     }
   };
@@ -229,7 +260,7 @@ const Dashboard: React.FC = () => {
     {
       label: 'Profile',
       action: handleProfileClick,
-      icon: IdCardIcon,
+      icon: ProfileViewIcon,
       progress: 100,
     },
     {
@@ -237,8 +268,8 @@ const Dashboard: React.FC = () => {
       action: handleOnboardingClick,
       icon: OnnboardingIcon,
       progress:
-        customerProfile.MatchConfidence > 0.8 &&
-        customerProfile.livenessScore > 0.8
+        customerProfile?.MatchConfidence > 0.8 &&
+        customerProfile?.livenessScore > 0.8
           ? 100
           : 70,
     },
@@ -246,14 +277,14 @@ const Dashboard: React.FC = () => {
       label: 'KYC',
       action: handleKycClick,
       icon: KycIcon,
-      progress: customerProfile.StatusID === '5' ? 100 : 25,
+      progress: customerProfile?.StatusID === '5' ? 100 : 25,
     },
     {
       label: 'CAMLO Reviewed',
       action: handleCamloClick,
       icon: OnnboardingIcon,
       progress:
-        customerProfile.StatusID === '3' || customerProfile.StatusID === '2'
+        customerProfile?.StatusID === '3' || customerProfile?.StatusID === '2'
           ? 50
           : 100,
     },
@@ -265,7 +296,7 @@ const Dashboard: React.FC = () => {
   //       <ActivityIndicator size="large" color="#28a745" />
   //     </Centered>
   //   );
-  if (loading) return <LoadingSpinner />;
+  // if (loading) return <LoadingSpinner />;
 
   const statusId = route.params?.statusId || 'default'; // fallback if undefined
 
@@ -290,6 +321,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Container source={require('../../Assets/images/mobilebg.jpg')}>
+      {loading && <LoadingSpinner />}
       <Header>
         <Icon
           name="bars"
@@ -349,7 +381,7 @@ const Dashboard: React.FC = () => {
               marginTop: 10,
             }}
           >
-            {customerProfile.StatusID < 4
+            {customerProfile?.StatusID < 4
               ? 'Validate your profile to get full features of our app'
               : 'Your profile is validated and ready to use all features'}
           </Text>{' '}
