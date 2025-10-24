@@ -125,7 +125,15 @@ const PersonalInformationForm: React.FC<Props> = ({
     setFormData((prev: any) => ({ ...prev, [name]: value }));
     setError((prev: any) => ({ ...prev, [name]: errorMessage }));
   };
-
+  const formatDate = (date: string | number | Date): string => {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   return (
     <FormContainer>
       <InputGroup>
@@ -227,7 +235,9 @@ const PersonalInformationForm: React.FC<Props> = ({
         <Label>Date of Birth</Label>
         <DatePickerButton onPress={() => setShowDatePicker(true)}>
           <DateText>
-            {formData.dob ? formData.dob : 'Select Date of Birth'}
+            {formatDate(formData.dob)
+              ? formatDate(formData.dob)
+              : 'Select Date of Birth'}
           </DateText>
         </DatePickerButton>
         {error.dob && <ErrorText>{error.dob}</ErrorText>}

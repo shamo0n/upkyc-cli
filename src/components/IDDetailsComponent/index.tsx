@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { ScrollView, Platform, PermissionsAndroid } from 'react-native';
 import styled from 'styled-components/native';
-import { launchCamera } from 'react-native-image-picker';
 import Toast from 'react-native-toast-message';
-import { FormDataType } from '../../types';
 import { IdUploadIcon, SelectedIcon } from '../../Assets/images/SVG';
+import { useNavigation } from '@react-navigation/native';
 
 // ========== STYLES ==========
 const Container = styled(ScrollView)`
@@ -54,48 +53,35 @@ const SelfieImagePreview = styled.Image`
   border-color: #444;
 `;
 
-// ========== TYPES ==========
-type LivenessResult = { isAlive?: boolean; score?: number };
+// ========== TYPES & PROPS ==========
+type UploadCallback = (
+  type: 'idFront' | 'idBack' | 'selfie',
+  data: { uri: string; base64: string },
+  faceData?: any,
+) => void;
 
-type IDDetailsProps = {
-  idType: string | number | null;
-  formData: FormDataType;
-  setFormData: React.Dispatch<React.SetStateAction<FormDataType>>;
-  onUpload?: (
-    type: keyof FormDataType,
-    data: { uri: string; base64: string },
-    result?: LivenessResult,
-  ) => void;
-  setParentLoader?: React.Dispatch<React.SetStateAction<boolean>>;
-  onLivenessResult?: (result: LivenessResult) => void;
-};
+const LUXAND_TOKEN = 'd8c4c17021224d80a82713129a62702e';
 
-// ========== COMPONENT ==========
-const IDDetailsComponent: React.FC<IDDetailsProps> = ({
-  idType,
-  formData,
-  setFormData,
-  onUpload,
+const IDDetailsComponent = ({
   setParentLoader,
-  onLivenessResult,
+  currentStep,
+  setCurrentStep,
+  onUpload,
+}: {
+  setParentLoader?: (v: boolean) => void;
+  currentStep?: number;
+  setCurrentStep?: (step: number) => void;
+  onUpload?: UploadCallback;
 }) => {
-  const [idImages, setIdImages] = useState<{
-    idFront: string | null;
-    idBack: string | null;
-    selfie: string | null;
-    idFrontUri?: string; // real URI for API upload
-  }>({
-    idFront: formData?.idFront?.base64 || null,
-    idBack: formData?.idBack?.base64 || null,
-    selfie: formData?.selfie?.base64 || null,
-    idFrontUri: formData?.idFront?.uri || undefined,
+  const [idImages, setIdImages] = useState({
+    idFront: null as string | null,
+    idBack: null as string | null,
+    selfie: null as string | null,
   });
-
   const [selfieAttempts, setSelfieAttempts] = useState(0);
-  const MAX_ATTEMPTS = 2;
-  const isPassport = idType === 'passport';
+  const navigation = useNavigation();
 
-  // ========== CAMERA PERMISSION ==========
+  // ========== PERMISSIONS ==========
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.request(
@@ -111,175 +97,61 @@ const IDDetailsComponent: React.FC<IDDetailsProps> = ({
     return true;
   };
 
-  const pickImage = async (type: 'idFront' | 'idBack' | 'selfie') => {
-    console.log(`[PickImage] Starting for ${type}`);
-
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) {
-      Toast.show({ type: 'error', text1: 'Camera permission denied' });
-      return;
-    }
-
-    try {
-      setParentLoader?.(true);
-      console.log('[PickImage] Launching camera...');
-
-      const result = await launchCamera({
-        mediaType: 'photo',
-        includeBase64: true,
-        quality: 0.8,
-        saveToPhotos: false,
-      });
-
-      if (result.didCancel || !result.assets?.length) {
-        console.log('[PickImage] Cancelled or no image selected');
-        return;
-      }
-
-      const asset = result.assets[0];
-      if (!asset.base64) throw new Error('Base64 data missing from camera');
-
-      const mimeType = asset.type || 'image/jpeg';
-      const base64Full = `data:${mimeType};base64,${asset.base64}`;
-      const cleanBase64 = asset.base64;
-
-      let finalBase64 = base64Full;
-
-      // --- Crop API fallback ---
-      if (type === 'idFront' || type === 'idBack') {
-        try {
-          const cropResponse = await fetch(
-            'https://liveexshield.ca:2020/IMG_CROP',
-            // 'https://amlhlep.com:44317//IMG_CROP',
-
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ base64String: cleanBase64 }),
-            },
-          );
-
-          if (cropResponse.ok) {
-            const cropData = await cropResponse.json();
-            if (cropData?.cropped_image) {
-              finalBase64 = `data:image/png;base64,${cropData.cropped_image}`;
-              console.log('[PickImage] Cropping successful');
-            } else {
-              console.warn(
-                '[PickImage] Crop API returned empty, using original image',
-              );
-            }
-          } else {
-            console.warn('[PickImage] Crop API failed, using original image');
-          }
-        } catch (err) {
-          console.warn('[PickImage] Crop API error, using original image', err);
-        }
-      }
-
-      // --- Face detection (ID Front / Selfie) ---
-      if (type === 'idFront' || type === 'selfie') {
-        const formData = new FormData();
-        formData.append('photo', {
-          uri: asset.uri!,
-          type: 'image/jpeg',
-          name: `${type}.jpg`,
-        } as any);
-
-        try {
-          const faceRes = await fetch(
-            'https://api.luxand.cloud/photo/landmarks',
-            {
-              method: 'POST',
-              headers: { token: 'd8c4c17021224d80a82713129a62702e' },
-              body: formData,
-            },
-          );
-          const faceJson = await faceRes.json();
-          if (!faceJson?.landmarks?.length) {
-            Toast.show({
-              type: 'error',
-              text1: 'No face detected. Please try again.',
-            });
-            setIdImages(prev => ({ ...prev, [type]: null }));
-            setFormData(prev => ({ ...prev, [type]: null }));
-            return;
-          }
-        } catch (err) {
-          console.warn(
-            '[PickImage] Face detection error, continuing anyway',
-            err,
-          );
-        }
-      }
-
-      if (type === 'selfie') {
-        const idFrontBase64 =
-          idImages.idFront?.split(',')[1] || formData?.idFront?.base64;
-
-        if (!idFrontBase64) {
-          Toast.show({
-            type: 'error',
-            text1: 'ID front image missing, please upload first.',
-          });
-          return;
-        }
-
-        const proceed = await verifySelfie(asset, idFrontBase64);
-        if (!proceed) return;
-      }
-
-      // --- Update state and parent ---
-      setIdImages(prev => ({ ...prev, [type]: finalBase64 }));
-      setFormData(prev => ({
-        ...prev,
-        [type]: { uri: asset.uri!, base64: finalBase64 },
-      }));
-      onUpload?.(type, { uri: asset.uri!, base64: finalBase64 });
-
-      Toast.show({ type: 'success', text1: `${type} uploaded successfully.` });
-    } catch (err: any) {
-      console.error('[PickImage] Error:', err);
-      Toast.show({
-        type: 'error',
-        text1: err.message || 'Upload failed. Try again.',
-      });
-      setIdImages(prev => ({ ...prev, [type]: null }));
-      setFormData(prev => ({ ...prev, [type]: null }));
-    } finally {
-      setParentLoader?.(false);
-    }
+  // ========== URI -> base64 ==========
+  const uriToBase64 = async (uri: string): Promise<string> => {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = (reader.result as string).split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
-  // ========== SELFIE VERIFICATION ==========
-  const verifySelfie = async (selfieAsset: any, idFrontBase64: string) => {
-    const attempt = selfieAttempts + 1;
+  // ========== VERIFY SELFIE (returns details - does NOT touch UI/navigation) ==========
+  const verifySelfie = async (selfieUri: string, idFrontUri: string) => {
+    // returns { similar: boolean, score?: number, livenessPassed: boolean, livenessScore?: number }
+    const result = {
+      similar: false,
+      score: 0,
+      livenessPassed: false,
+      livenessScore: 0,
+    };
+
     try {
-      // --- Similarity API ---
+      console.log('[verifySelfie] similarity check -', idFrontUri, selfieUri);
+
       const simForm = new FormData();
-      simForm.append('photo1', {
-        uri: selfieAsset.uri,
+      simForm.append('face1', {
+        uri: idFrontUri,
+        type: 'image/jpeg',
+        name: 'idFront.jpg',
+      } as any);
+      simForm.append('face2', {
+        uri: selfieUri,
         type: 'image/jpeg',
         name: 'selfie.jpg',
       } as any);
 
-      simForm.append('photo2', {
-        uri: `data:image/jpeg;base64,${idFrontBase64}`,
-        type: 'image/jpeg',
-        name: 'idFront.jpg',
-      } as any);
-
       const simRes = await fetch('https://api.luxand.cloud/photo/similarity', {
         method: 'POST',
-        headers: { token: 'd8c4c17021224d80a82713129a62702e' },
+        headers: { token: LUXAND_TOKEN },
         body: simForm,
       });
       const simData = await simRes.json();
+      console.log('[verifySelfie] Similarity response:', simData);
+      result.similar = !!simData?.similar;
+      result.score = Number(simData?.score || 0);
 
-      // --- Liveness API ---
+      // If similarity is very low we can skip liveness call, but we still run it if you want both checks always
+      // Run liveness only when similarity passes threshold OR optionally always
       const liveForm = new FormData();
       liveForm.append('photo', {
-        uri: selfieAsset.uri,
+        uri: selfieUri,
         type: 'image/jpeg',
         name: 'selfie.jpg',
       } as any);
@@ -288,87 +160,242 @@ const IDDetailsComponent: React.FC<IDDetailsProps> = ({
         'https://api.luxand.cloud/photo/liveness/v2',
         {
           method: 'POST',
-          headers: { token: 'd8c4c17021224d80a82713129a62702e' },
+          headers: { token: LUXAND_TOKEN },
           body: liveForm,
         },
       );
       const liveData = await liveRes.json();
-      console.log('liveData', liveData);
-      const failed = simData.similarity < 0.8 || !liveData.live;
+      console.log('[verifySelfie] Liveness response:', liveData);
+      result.livenessPassed = liveData?.status === 'success';
+      result.livenessScore = Number(liveData?.liveness_score || 0);
 
-      if (failed && attempt < MAX_ATTEMPTS) {
-        setSelfieAttempts(attempt);
-        setIdImages(prev => ({ ...prev, selfie: null }));
-        setFormData(prev => ({ ...prev, selfie: null }));
+      return result;
+    } catch (err) {
+      console.error('[verifySelfie] ERROR', err);
+      // Return conservative failure result
+      return result;
+    }
+  };
+
+  // ========== pickImageFromPath - returns boolean (success) ==========
+  const pickImageFromPath = async (
+    type: 'idFront' | 'idBack' | 'selfie',
+    uri: string,
+    base64: string,
+    updateStep?: (s: string) => void,
+  ): Promise<boolean> => {
+    try {
+      setParentLoader?.(true);
+      console.log(`[pickImageFromPath] Type=${type} URI=${uri}`);
+
+      // --- ID front/back: just set + notify parent (no extra checks here) ---
+      if (type === 'idFront' || type === 'idBack') {
+        setIdImages(prev => ({ ...prev, [type]: uri }));
+        if (typeof onUpload === 'function') {
+          onUpload(type, { uri, base64: `data:image/jpeg;base64,${base64}` });
+        }
         Toast.show({
-          type: 'error',
-          text1: 'Liveness check failed. Try again.',
+          type: 'success',
+          text1: `${type} uploaded successfully.`,
         });
-        return false;
+        return true;
       }
 
-      if (!failed)
-        Toast.show({ type: 'success', text1: 'Selfie verified successfully.' });
-      else
-        Toast.show({
-          type: 'info',
-          text1: '⚠️ Face not matched after 2 attempts, proceeding anyway.',
-        });
+      // --- SELFIE: do verification logic & upload conditionally ---
+      if (type === 'selfie') {
+        // if ID front not present -> show message and abort
+        const idFrontUri = idImages.idFront;
+        if (!idFrontUri) {
+          Toast.show({
+            type: 'error',
+            text1: 'Please capture/upload ID front before taking selfie.',
+          });
+          return false;
+        }
 
-      setSelfieAttempts(0);
-      return true;
-    } catch (err: any) {
-      console.error('[verifySelfie]', err);
-      setIdImages(prev => ({ ...prev, selfie: null }));
-      setFormData(prev => ({ ...prev, selfie: null }));
-      setSelfieAttempts(0);
-      Toast.show({
-        type: 'error',
-        text1: err.message || 'Selfie verification failed.',
-      });
+        // first attempt: run checks
+        if (selfieAttempts === 0) {
+          updateStep?.('Running face similarity and liveness checks...');
+          const v = await verifySelfie(uri, idFrontUri);
+          console.log('[pickImageFromPath] verifySelfie result:', v);
+
+          const SIM_THRESHOLD = 0.75;
+          const LIVENESS_THRESHOLD = 0.7;
+
+          const simOk = v.similar && v.score >= SIM_THRESHOLD;
+          const liveOk =
+            v.livenessPassed && v.livenessScore >= LIVENESS_THRESHOLD;
+
+          if (simOk && liveOk) {
+            // Passed both checks - upload
+            setIdImages(prev => ({ ...prev, selfie: uri }));
+            if (typeof onUpload === 'function') {
+              onUpload(
+                'selfie',
+                { uri, base64: `data:image/jpeg;base64,${base64}` },
+                {
+                  score: v.score,
+                  livenessScore: v.livenessScore,
+                  similar: v.similar,
+                  livenessPassed: v.livenessPassed,
+                },
+              );
+            }
+            Toast.show({
+              type: 'success',
+              text1: 'Selfie verified and uploaded.',
+            });
+            setSelfieAttempts(0);
+            // optionally advance step in parent when selfie is uploaded
+            setCurrentStep?.(
+              typeof currentStep === 'number' ? currentStep + 1 : undefined,
+            );
+            return true;
+          }
+
+          // If either check failed -> don't upload yet, increment attempt and return false so camera stays for retry
+          setSelfieAttempts(1);
+          let reason = 'Selfie verification failed.';
+          if (!simOk && !liveOk)
+            reason = 'Face not matched and liveness failed.';
+          else if (!simOk) reason = 'Face does not match ID front.';
+          else reason = 'Liveness check failed.';
+
+          Toast.show({
+            type: 'error',
+            text1: reason,
+            text2:
+              'Please retake your selfie. Second attempt will be accepted.',
+          });
+
+          // return false -> SelfieCamera will keep camera open for retry
+          return false;
+        }
+
+        // second attempt: accept and upload regardless of checks
+        if (selfieAttempts >= 1) {
+          setIdImages(prev => ({ ...prev, selfie: uri }));
+          if (typeof onUpload === 'function') {
+            onUpload(
+              'selfie',
+              { uri, base64: `data:image/jpeg;base64,${base64}` },
+              undefined,
+            );
+          }
+          Toast.show({
+            type: 'info',
+            text1: 'Second attempt accepted — selfie uploaded.',
+            text2:
+              'If verification failed previously, the selfie is accepted manually.',
+          });
+          // reset attempts
+          setSelfieAttempts(0);
+          setCurrentStep?.(
+            typeof currentStep === 'number' ? currentStep + 1 : undefined,
+          );
+          return true;
+        }
+      }
+
+      // fallback
       return false;
+    } catch (err) {
+      console.error('[pickImageFromPath] ERROR', err);
+      Toast.show({ type: 'error', text1: 'Failed to process image.' });
+      return false;
+    } finally {
+      setParentLoader?.(false);
+    }
+  };
+
+  // ========== NAVIGATION TO CAMERA ==========
+  const navigateToCamera = (
+    screen: string,
+    type: 'idFront' | 'idBack' | 'selfie',
+  ) => {
+    if (type === 'selfie') {
+      navigation.navigate('SelfieCamera', {
+        onSelfieTaken: async (
+          photoPath: string,
+          updateStep?: (s: string) => void,
+        ) => {
+          try {
+            setParentLoader?.(true);
+            updateStep?.('Processing selfie...');
+            const uri =
+              Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+            const base64 = await uriToBase64(uri);
+            const ok = await pickImageFromPath(
+              'selfie',
+              uri,
+              base64,
+              updateStep,
+            );
+            // return ok to camera (SelfieCamera expects boolean)
+            return ok;
+          } catch (err) {
+            console.error('[SelfieCamera onSelfieTaken] ERROR:', err);
+            Toast.show({ type: 'error', text1: 'Selfie processing failed.' });
+            return false;
+          } finally {
+            setParentLoader?.(false);
+          }
+        },
+      });
+    } else {
+      // ID front / back cameras use onReturn convention
+      navigation.navigate(screen, {
+        onReturn: async (photoPath: string) => {
+          try {
+            setParentLoader?.(true);
+            const uri =
+              Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+            const base64 = await uriToBase64(uri);
+            await pickImageFromPath(type, uri, base64);
+          } catch (err) {
+            console.error(`[${type}Camera onReturn] ERROR:`, err);
+            Toast.show({ type: 'error', text1: 'Error processing image.' });
+          } finally {
+            setParentLoader?.(false);
+          }
+        },
+      });
     }
   };
 
   // ========== UI ==========
   return (
     <Container contentContainerStyle={{ alignItems: 'center' }}>
-      <Title>Please Upload Your Documents</Title>
+      <Title>Upload Your ID Documents</Title>
 
-      <Button onPress={() => pickImage('idFront')}>
+      {/* ID Front */}
+      <Button onPress={() => navigateToCamera('IDFrontCamera', 'idFront')}>
         <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
-        <ButtonText>Upload ID Front</ButtonText>
+        <ButtonText>Take ID Front</ButtonText>
         {idImages.idFront && (
           <SelectedIcon style={{ position: 'absolute', right: 12, top: 10 }} />
         )}
       </Button>
       {idImages.idFront && <ImagePreview source={{ uri: idImages.idFront }} />}
 
-      {!isPassport && (
-        <>
-          <Button onPress={() => pickImage('idBack')}>
-            <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
-            <ButtonText>Upload ID Back</ButtonText>
-            {idImages.idBack && (
-              <SelectedIcon
-                style={{ position: 'absolute', right: 12, top: 10 }}
-              />
-            )}
-          </Button>
-          {idImages.idBack && (
-            <ImagePreview source={{ uri: idImages.idBack }} />
-          )}
-        </>
-      )}
-
-      <Button onPress={() => pickImage('selfie')}>
+      {/* ID Back */}
+      <Button onPress={() => navigateToCamera('IDBackCamera', 'idBack')}>
         <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
-        <ButtonText>Upload Selfie</ButtonText>
+        <ButtonText>Take ID Back</ButtonText>
+        {idImages.idBack && (
+          <SelectedIcon style={{ position: 'absolute', right: 12, top: 10 }} />
+        )}
+      </Button>
+      {idImages.idBack && <ImagePreview source={{ uri: idImages.idBack }} />}
+
+      {/* Selfie */}
+      <Button onPress={() => navigateToCamera('SelfieCamera', 'selfie')}>
+        <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
+        <ButtonText>Take Selfie</ButtonText>
         {idImages.selfie && (
           <SelectedIcon style={{ position: 'absolute', right: 12, top: 10 }} />
         )}
       </Button>
-
       {idImages.selfie && (
         <SelfieImagePreview source={{ uri: idImages.selfie }} />
       )}

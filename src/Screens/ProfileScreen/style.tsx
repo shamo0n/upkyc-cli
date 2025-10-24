@@ -7,11 +7,11 @@ export const Container = styled.ImageBackground`
 `;
 
 export const ProfileBox = styled.View`
-  background-color: #2a3a2f;
+  background-color: #355042;
   border-radius: 12px;
   padding: 16px;
   align-items: center;
-  margin-bottom: 20px;
+  margin-top: 50px;
 `;
 
 export const InfoList = styled.View`

@@ -71,6 +71,7 @@ const PersonalInformationScreen = () => {
   const [idType, setIdType] = useState<number | null>(null);
   const [isUploadSuccessful, setIsUploadSuccessful] = useState(false);
   const [canadaId, setCanadaId] = useState<string | null>(null);
+  const [verificationStep, setVerificationStep] = useState(1);
 
   const [progressLabel, setProgressLabel] = useState('Starting...');
   const [showProgressBar, setShowProgressBar] = useState(false);
@@ -289,7 +290,8 @@ const PersonalInformationScreen = () => {
       // Update identification info before upload
       await handleUpdateIdentificationInfoAPI(idType);
       if (!data.base64) throw new Error('Base64 data missing');
-
+      // Save base64 to formData
+      setFormData(prev => ({ ...prev, [imageType]: data.base64 }));
       // Prepare upload body
       const cleanBase64 = data.base64.replace(
         /^data:image\/[a-z]+;base64,/,
@@ -346,10 +348,6 @@ const PersonalInformationScreen = () => {
         } else {
           throw new Error(message || 'Upload failed');
         }
-        //   if (imageType === 'selfie') setIsUploadSuccessful(true);
-        // } else {
-        //   throw new Error(message || 'Upload failed');
-        // }
       });
     } catch (err: any) {
       console.error('handleImageUpload error:', err);
@@ -362,77 +360,6 @@ const PersonalInformationScreen = () => {
     }
   };
 
-  // const handleImageUpload = async (
-  //   imageType: 'idFront' | 'idBack' | 'selfie',
-  //   data: { uri: string; base64?: string },
-  //   faceData?: FaceData,
-  // ) => {
-  //   console.log('Type:', imageType);
-  //   console.log('URI:', data.uri);
-  //   console.log('Base64:', data.base64);
-
-  //   try {
-  //     setLoading(true);
-  //     if (!idType) throw new Error('ID type not selected');
-
-  //     await handleUpdateIdentificationInfoAPI(idType);
-
-  //     // Save base64 to formData
-  //     setFormData(prev => ({ ...prev, [imageType]: data.base64 }));
-
-  //     // Clean the base64 string for API
-  //     const cleanBase64 = data.base64?.replace(
-  //       /^data:image\/[a-z]+;base64,/,
-  //       '',
-  //     );
-  //     if (!cleanBase64) throw new Error('Base64 data is missing');
-
-  //     const body: any = {
-  //       IDTypeID:
-  //         imageType === 'idFront' ? 97 : imageType === 'idBack' ? 98 : 99,
-  //       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-  //       Email: authUser?.Email,
-  //       Doccument_type: imageType === 'selfie' ? 'selfie' : 'idcard',
-  //       Document_NO: '',
-  //       Document_issue_Date: '',
-  //       Document_expiry_Date: '',
-  //       doc_name:
-  //         imageType === 'idFront'
-  //           ? 'idfront.png'
-  //           : imageType === 'idBack'
-  //           ? 'idback.png'
-  //           : 'selfie.png',
-  //       doc_Base64: cleanBase64,
-  //       remarks: 'uploaded from digital onboarding',
-  //       doc_MASTER_DETAILS:
-  //         imageType === 'selfie' ? 'Selfie Image' : `ID ${imageType} image`,
-  //       livenessScore: faceData?.liveness?.score,
-  //       livenessResult: faceData?.liveness?.result,
-  //       MatchPercentage: faceData?.score,
-  //     };
-
-  //     SaveSignupDocumentAPI(body, (response: any) => {
-  //       const children = response?.responseBody?.children || [];
-  //       const messageCode = children.find(
-  //         (c: any) => c.name === 'MessageCode',
-  //       )?.value;
-  //       const message =
-  //         children.find((c: any) => c.name === 'Message')?.value || '';
-
-  //       if (messageCode === '2') {
-  //         showToast(message || `${imageType} uploaded successfully`);
-  //         if (imageType === 'selfie') setIsUploadSuccessful(true);
-  //       } else {
-  //         throw new Error(message || 'Upload failed');
-  //       }
-  //     });
-  //   } catch (err: any) {
-  //     console.error(err);
-  //     showToast(err?.message || 'Upload failed');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleProofOfDocumentUpload = async (
     base64Data?: string,
     imageType?: string,
@@ -575,6 +502,9 @@ const PersonalInformationScreen = () => {
           : idType === 5
           ? 'Passport'
           : '',
+      idFront: null,
+      idBack: null,
+      selfie: null,
     });
   };
 
@@ -605,7 +535,8 @@ const PersonalInformationScreen = () => {
           break;
         case 5:
           if (!formData.selfie)
-            return showToast('Please upload selfie before proceeding.');
+            console.log('[Step 5 Check] formData:', formData);
+          return showToast('Please upload selfie before proceeding.');
           break;
       }
       setCurrentStep(prev => prev + 1);
@@ -692,11 +623,13 @@ const PersonalInformationScreen = () => {
                   idType={idType}
                   formData={formData}
                   setFormData={setFormData}
-                  onUpload={
-                    (type, data, faceData) =>
-                      handleImageUpload(type, data, faceData) // data is { uri, base64 }
-                  }
+                  onUpload={(type, data, faceData) => {
+                    console.log(`[Parent onUpload] Received ${type}`, data);
+                    handleImageUpload(type, data, faceData); // data is { uri, base64 }
+                  }}
                   setParentLoader={setLoading}
+                  setCurrentStep={setCurrentStep}
+                  currentStep={currentStep}
                   authUser={authUser}
                 />
               </>

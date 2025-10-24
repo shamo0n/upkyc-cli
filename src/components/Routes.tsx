@@ -15,6 +15,9 @@ import PersonalInformationScreen from '../Screens/PersonalInformation';
 import SupportScreen from '../Screens/SupportScreen';
 import IDDetailsComponentSec from '../Screens/IDDetailsComponentSec';
 import DocumentIDUpload from '../Screens/DocumentIDUpload';
+import SelfieCameraScreen from './SelfieCameraScreen';
+import IDFrontCamera from './IDFrontCamera';
+import IDBackCamera from './IDBackCamera';
 
 // 1️⃣ Define all screen names and their parameter types
 export type RootStackParamList = {
@@ -97,6 +100,15 @@ export default function Routes() {
           name="IDDetailsComponentSec"
           component={IDDetailsComponentSec}
         />
+        <Stack.Screen
+          name="SelfieCamera"
+          component={SelfieCameraScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen name="IDFrontCamera" component={IDFrontCamera} />
+        <Stack.Screen name="IDBackCamera" component={IDBackCamera} />
+
         <Stack.Screen name="DocumentIDUpload" component={DocumentIDUpload} />
       </Stack.Navigator>
     </NavigationContainer>

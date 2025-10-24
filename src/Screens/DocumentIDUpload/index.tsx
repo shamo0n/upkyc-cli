@@ -1,206 +1,3 @@
-// import React, { useState, useContext, useEffect } from 'react';
-// import { ScrollView } from 'react-native';
-// import { useNavigation, RouteProp, useRoute } from '@react-navigation/native';
-// import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import Toast from 'react-native-toast-message';
-
-// import IDDetailsComponent from '../IDDetailsComponentSec';
-// import DocumentUploadComponent from '../../components/DocumentUploadComponent';
-// import { AuthContext } from '../../Contexts/AuthContext';
-// import {
-//   SaveSignupDocumentAPI,
-//   UpdateIdentificationInfoAPI,
-// } from '../../Helpers/API';
-
-// import {
-//   Container,
-//   Title,
-//   ButtonRow,
-//   Button,
-//   ButtonText,
-//   Background,
-//   Box,
-// } from './style';
-// import { RootStackParamList } from '../../components/Routes';
-// import AppHeader from '../../components/AppHeader';
-
-// type NavigationProp = NativeStackNavigationProp<
-//   RootStackParamList,
-//   'DocumentIDUpload'
-// >;
-// type RouteProps = RouteProp<RootStackParamList, 'DocumentIDUpload'>;
-
-// const DocumentIDUpload: React.FC = () => {
-//   const navigation = useNavigation<NavigationProp>();
-//   const route = useRoute<RouteProps>();
-//   const { authUser } = useContext(AuthContext);
-
-//   // ✅ Destructure incoming navigation params
-//   const { step, idType: passedIdType, idFront, idBack } = route.params || {};
-
-//   // ✅ Initialize states with fallback values from navigation params
-//   const [currentStep, setCurrentStep] = useState<number>(step || 5);
-//   const [idType, setIdType] = useState<string>(passedIdType || '');
-//   const [formData, setFormData] = useState<any>({
-//     idFront: idFront || null,
-//     idBack: idBack || null,
-//   });
-//   const [loading, setLoading] = useState<boolean>(false);
-
-//   // 🧩 Optional: Debug log to verify data received
-//   useEffect(() => {
-//     console.log('Received navigation params:', route.params);
-//   }, [route.params]);
-
-//   const handleNext = () => {
-//     if (currentStep === 5 && !formData.idFront) {
-//       Toast.show({ type: 'error', text1: 'Please upload required ID images' });
-//       return;
-//     }
-//     if (currentStep < 6) setCurrentStep(currentStep + 1);
-//   };
-
-//   const handleSkip = () => navigation.navigate('Dashboard');
-//   const handleCancel = () => navigation.goBack();
-
-//   const handleUpdateIdentificationInfoAPI = async () => {
-//     console.log('idType FROM DOC UPLOAD', idType);
-
-//     const body = {
-//       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-//       Email: authUser?.Email,
-//       IdentificationTypeID: idType,
-//       IdentificationTypeName:
-//         idType === '7'
-//           ? 'Drivers Licence'
-//           : idType === '4'
-//           ? 'Citizenship Card'
-//           : idType === '5'
-//           ? 'Passport'
-//           : '',
-//     };
-
-//     console.log('FROM DOC UPLOAD', body);
-//     try {
-//       await UpdateIdentificationInfoAPI(body);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   const handleIdUpload = async (imageType: string, base64Data: string) => {
-//     console.log('handleImageUpload frm handleIdUpload func ');
-
-//     const idMap = {
-//       idFront: { IDTypeID: 97, name: 'idfront.png', desc: 'ID Card Front' },
-//       idBack: { IDTypeID: 98, name: 'idback.png', desc: 'ID Card Back' },
-//       selfie: { IDTypeID: 99, name: 'selfie.png', desc: 'Selfie Image' },
-//     };
-//     const cfg = idMap[imageType];
-//     if (!cfg) return;
-
-//     const body = {
-//       IDTypeID: cfg.IDTypeID,
-//       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-//       Email: authUser?.Email,
-//       Doccument_type: imageType,
-//       Document_NO: '',
-//       Document_issue_Date: '',
-//       Document_expiry_Date: '',
-//       doc_name: cfg.name,
-//       remarks: 'uploaded from digital onboarding',
-//       doc_MASTER_DETAILS: cfg.desc,
-//       doc_Base64: base64Data.replace(/^data:image\/[a-z]+;base64,/, ''),
-//     };
-
-//     try {
-//       setLoading(true);
-//       await SaveSignupDocumentAPI(body);
-//       Toast.show({ type: 'success', text1: `${cfg.desc} uploaded!` });
-//     } catch (error) {
-//       Toast.show({ type: 'error', text1: 'Upload failed' });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleImageUpload = async (type: string, data: any) => {
-//     console.log('handleImageUpload frm handleImageUpload func ');
-//     setFormData(prev => ({ ...prev, [type]: data }));
-//     await handleUpdateIdentificationInfoAPI();
-//     await handleIdUpload(type, data);
-//   };
-
-//   const handleDocumentUpload = (data: any) => {
-//     setFormData(prev => ({
-//       ...prev,
-//       document: data.document,
-//       documentType: data.documentType,
-//       documentName: data.documentName,
-//       documentExt: data.documentExt,
-//     }));
-//   };
-
-//   return (
-//     <Background source={require('../../Assets/images/mobilebg.jpg')}>
-//       <Container>
-//         <AppHeader showBack={true} onBackPress={handleCancel} />
-//         <ScrollView
-//           contentContainerStyle={{
-//             flexGrow: 1,
-//             width: '100%',
-//             alignItems: 'center',
-//             paddingHorizontal: 20,
-//             paddingBottom: 40,
-//           }}
-//         >
-//           <Box style={{ width: '100%' }}>
-//             {currentStep === 5 && (
-//               <>
-//                 <Title>Upload Images</Title>
-//                 <IDDetailsComponent
-//                   idType={idType}
-//                   idFrontPath={formData.idFront || idFront}
-//                   idBackPath={formData.idBack || idBack}
-//                   formData={formData}
-//                   setFormData={setFormData}
-//                   onUpload={handleImageUpload}
-//                   setParentLoader={setLoading}
-//                 />
-//               </>
-//             )}
-
-//             {currentStep === 6 && (
-//               <>
-//                 <Title>Document Upload</Title>
-//                 <DocumentUploadComponent
-//                   formData={formData}
-//                   setFormData={setFormData}
-//                   onUpload={handleDocumentUpload}
-//                 />
-//               </>
-//             )}
-
-//             <ButtonRow>
-//               <Button onPress={currentStep === 6 ? handleSkip : handleCancel}>
-//                 <ButtonText>{currentStep === 6 ? 'Skip' : 'Cancel'}</ButtonText>
-//               </Button>
-//               <Button
-//                 onPress={handleNext}
-//                 disabled={currentStep === 5 && !formData.idFront}
-//               >
-//                 <ButtonText>Next</ButtonText>
-//               </Button>
-//             </ButtonRow>
-//           </Box>
-//         </ScrollView>
-//       </Container>
-//       <Toast />
-//     </Background>
-//   );
-// };
-
-// export default DocumentIDUpload;
 import React, { useState, useContext, useEffect } from 'react';
 import { ScrollView } from 'react-native';
 import { useNavigation, RouteProp, useRoute } from '@react-navigation/native';
@@ -342,10 +139,21 @@ const DocumentIDUpload: React.FC = () => {
 
     try {
       setLoading(true);
-      await SaveSignupDocumentAPI(body);
+      await SaveSignupDocumentAPI(body, data => {
+        console.log('[SaveSignupDocumentAPI Response]', data);
+        if (!data?.IsErrorMessage) {
+          Toast.show({ type: 'success', text1: `${cfg.desc} uploaded!` });
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: data?.Message || 'Upload failed',
+          });
+        }
+      });
+
       if (imageType === 'selfie') setIsSelfieUploaded(true);
-      Toast.show({ type: 'success', text1: `${cfg.desc} uploaded!` });
     } catch (err) {
+      console.error('[Upload Error]', err);
       Toast.show({ type: 'error', text1: 'Upload failed' });
     } finally {
       setLoading(false);
@@ -353,10 +161,21 @@ const DocumentIDUpload: React.FC = () => {
   };
 
   // Unified Image Upload Handler
-  const handleImageUpload = async (type: string, data: any, faceData?: any) => {
-    setFormData(prev => ({ ...prev, [type]: data, faceData }));
+  // const handleImageUpload = async (type: string, data: any, faceData?: any) => {
+  //   setFormData(prev => ({ ...prev, [type]: data, faceData }));
+  //   await handleUpdateIdentificationInfoAPI();
+  //   await handleIdUpload(type, data);
+  // };
+  const handleImageUpload = async (
+    type: string,
+    data: { uri: string; base64: string },
+    faceData?: any,
+  ) => {
+    console.log('🆙 Upload complete:', type, data.uri);
+
+    setFormData(prev => ({ ...prev, [type]: data.base64, faceData }));
     await handleUpdateIdentificationInfoAPI();
-    await handleIdUpload(type, data);
+    await handleIdUpload(type, data.base64);
   };
 
   const handleDocumentUpload = (data: any) => {
