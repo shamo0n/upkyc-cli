@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TextInput, Platform, KeyboardAvoidingView } from 'react-native';
+import {
+  TextInput,
+  Platform,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -30,6 +36,7 @@ import {
   LoginBoxContainer,
 } from './style';
 import AppHeader from '../../components/AppHeader';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const OtpScreen: React.FC = () => {
   const { authUser, saveUserSession, setIsLoggedIn } = useContext(AuthContext);
@@ -274,79 +281,84 @@ const OtpScreen: React.FC = () => {
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
       {loading && <LoadingSpinner />}
       <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
-      <Container>
-        <LoginBoxContainer>
-          <OtpTitle>Enter OTP</OtpTitle>
-          <OtpInfo>
-            OTP sent to{' '}
-            <OtpBold>{authUser?.Email && maskEmail(authUser.Email)}</OtpBold>
-          </OtpInfo>
-          <OtpInputContainer>
-            {otp.map((digit, index) => (
-              <OtpInput
-                key={index}
-                ref={el => (inputRefs.current[index] = el)}
-                value={digit}
-                onChangeText={val => {
-                  if (!/^\d*$/.test(val)) return; // only numbers
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1, width: '100%', justifyContent: 'center' }}
+        >
+          <LoginBoxContainer>
+            <OtpTitle>Enter OTP</OtpTitle>
+            <OtpInfo>
+              OTP sent to{' '}
+              <OtpBold>{authUser?.Email && maskEmail(authUser.Email)}</OtpBold>
+            </OtpInfo>
+            <OtpInputContainer>
+              {otp.map((digit, index) => (
+                <OtpInput
+                  key={index}
+                  ref={el => (inputRefs.current[index] = el)}
+                  value={digit}
+                  onChangeText={val => {
+                    if (!/^\d*$/.test(val)) return; // only numbers
 
-                  const newOtp = [...otp];
-                  newOtp[index] = val;
-                  setOtp(newOtp);
-
-                  if (val.length === 1 && index < otp.length - 1) {
-                    inputRefs.current[index + 1]?.focus();
-                  }
-                }}
-                onKeyPress={({ nativeEvent }) => {
-                  if (
-                    nativeEvent.key === 'Backspace' &&
-                    otp[index].length === 0 &&
-                    index > 0
-                  ) {
-                    inputRefs.current[index - 1]?.focus();
                     const newOtp = [...otp];
-                    newOtp[index - 1] = '';
+                    newOtp[index] = val;
                     setOtp(newOtp);
-                  }
-                }}
-                keyboardType="number-pad"
-                maxLength={1}
-                placeholder=""
-                placeholderTextColor="#fff"
-                textAlign="center"
-                style={{
-                  color: '#fff',
-                  fontSize: 24,
-                  borderBottomWidth: 2,
-                  borderColor: '#fff',
-                  marginHorizontal: 5,
-                  width: 50,
-                  height: 50,
-                }}
-              />
-            ))}
-          </OtpInputContainer>
 
-          {errorMessage.length > 0 && (
-            <ErrorMessage>{errorMessage}</ErrorMessage>
-          )}
+                    if (val.length === 1 && index < otp.length - 1) {
+                      inputRefs.current[index + 1]?.focus();
+                    }
+                  }}
+                  onKeyPress={({ nativeEvent }) => {
+                    if (
+                      nativeEvent.key === 'Backspace' &&
+                      otp[index].length === 0 &&
+                      index > 0
+                    ) {
+                      inputRefs.current[index - 1]?.focus();
+                      const newOtp = [...otp];
+                      newOtp[index - 1] = '';
+                      setOtp(newOtp);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  placeholder=""
+                  placeholderTextColor="#fff"
+                  textAlign="center"
+                  style={{
+                    color: '#fff',
+                    fontSize: 24,
+                    borderBottomWidth: 2,
+                    borderColor: '#fff',
+                    marginHorizontal: 5,
+                    width: 50,
+                    height: 50,
+                  }}
+                />
+              ))}
+            </OtpInputContainer>
 
-          <Button onPress={handleOtpSubmit} disabled={loading}>
-            <ButtonText>Submit</ButtonText>
-          </Button>
+            {errorMessage.length > 0 && (
+              <ErrorMessage>{errorMessage}</ErrorMessage>
+            )}
 
-          <ResendButton
-            onPress={handleResendOTP}
-            disabled={resendTimer > 0 || loading}
-            activeOpacity={resendTimer > 0 ? 1 : 0.7}
-          >
-            <ResendText>
-              {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
-            </ResendText>
-          </ResendButton>
-        </LoginBoxContainer>
-      </Container>
+            <Button onPress={handleOtpSubmit} disabled={loading}>
+              <ButtonText>Submit</ButtonText>
+            </Button>
+
+            <ResendButton
+              onPress={handleResendOTP}
+              disabled={resendTimer > 0 || loading}
+              activeOpacity={resendTimer > 0 ? 1 : 0.7}
+            >
+              <ResendText>
+                {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+              </ResendText>
+            </ResendButton>
+          </LoginBoxContainer>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </Background>
   );
 };

@@ -1,27 +1,31 @@
-platform :ios, '16.0'
+require_relative '../node_modules/react-native/scripts/react_native_pods.rb'
 
-require_relative '../node_modules/react-native/scripts/react_native_pods'
+platform :ios, '15.1'
+use_frameworks! :linkage => :static
 
-use_modular_headers!
+install! 'cocoapods',
+  :deterministic_uuids => false
 
 target 'Upkyc' do
   config = use_native_modules!
 
   use_react_native!(
-    :path => '../node_modules/react-native',
-    :hermes_enabled => true,
-    :fabric_enabled => false
+    :path => config[:reactNativePath],
+    :hermes_enabled => true
   )
 
   post_install do |installer|
-    react_native_post_install(installer)
+    react_native_post_install(
+      installer,
+      :mac_catalyst_enabled => false
+    )
 
+    # Fix Firebase + Swift + Hermes module issues
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        # Remove -Werror to avoid build failure
-        config.build_settings['WARNING_CFLAGS'] = ''
-        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = config.build_settings['OTHER_CPLUSPLUSFLAGS'].to_s.gsub('-Werror', '')
-        config.build_settings['OTHER_CFLAGS'] = config.build_settings['OTHER_CFLAGS'].to_s.gsub('-Werror', '')
+        config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'YES'
+        config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
+        config.build_settings['DEFINES_MODULE'] = 'YES'
       end
     end
   end

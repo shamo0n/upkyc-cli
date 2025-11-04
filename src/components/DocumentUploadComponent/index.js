@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { Platform } from "react-native";
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
 import * as DocumentPicker from 'react-native-document-picker';
-import { Picker } from "@react-native-picker/picker";
-import Toast from "react-native-toast-message";
+import Toast from 'react-native-toast-message';
 import {
   Container,
   Label,
@@ -10,25 +10,29 @@ import {
   ButtonText,
   FileNameText,
   PickerWrapper,
-} from "./style";
+} from './style';
 
 const documentOptions = [
-  { label: "Citizenship Card", value: "citizenshipcard" },
-  { label: "Passport", value: "passport" },
-  { label: "Birth Certificate", value: "birthcertificate" },
+  { label: 'Citizenship Card', value: 'citizenshipcard' },
+  { label: 'Passport', value: 'passport' },
+  { label: 'Birth Certificate', value: 'birthcertificate' },
 ];
 
 const DocumentUploadComponent = ({ onUpload }) => {
-  const [documentType, setDocumentType] = useState("");
-  const [documentName, setDocumentName] = useState("");
-  const [fileExtension, setFileExtension] = useState("");
+  const [open, setOpen] = useState(false);
+  const [documentType, setDocumentType] = useState('');
+  const [items, setItems] = useState(documentOptions);
+
+  const [documentName, setDocumentName] = useState('');
+  const [fileExtension, setFileExtension] = useState('');
   const [document, setDocument] = useState(null);
 
   const handleFileUpload = async () => {
+    console.log('documentType', documentType);
     if (!documentType) {
       Toast.show({
-        type: "error",
-        text1: "Please select a document type before uploading.",
+        type: 'error',
+        text1: 'Please select a document type before uploading.',
       });
       return;
     }
@@ -39,13 +43,12 @@ const DocumentUploadComponent = ({ onUpload }) => {
       });
 
       const name = res.name;
-      const ext = name.split(".").pop().toLowerCase();
+      const ext = name.split('.').pop().toLowerCase();
 
       setDocumentName(name);
       setFileExtension(ext);
       setDocument(res);
 
-      // Convert to base64 if needed (optional)
       if (onUpload) {
         onUpload({
           documentType,
@@ -56,10 +59,10 @@ const DocumentUploadComponent = ({ onUpload }) => {
       }
     } catch (err) {
       if (!DocumentPicker.isCancel(err)) {
-        console.error("Document Picker Error:", err);
+        console.error('Document Picker Error:', err);
         Toast.show({
-          type: "error",
-          text1: "Failed to pick document.",
+          type: 'error',
+          text1: 'Failed to pick document.',
         });
       }
     }
@@ -67,40 +70,79 @@ const DocumentUploadComponent = ({ onUpload }) => {
 
   return (
     <Container>
-      {/* Document Type Picker */}
       <Label>Document Type</Label>
       <PickerWrapper>
-        <Picker
-          selectedValue={documentType}
-          onValueChange={(itemValue) => setDocumentType(itemValue)}
-          style={{
-            color: "#ffffff",
-            width: 450,
-            backgroundColor: "transparent",
-            height: Platform.OS === "ios" ? 200 : 50,
+        <DropDownPicker
+          open={open}
+          value={documentType}
+          items={items}
+          setOpen={setOpen}
+          setValue={value => {
+            if (typeof value === 'function') {
+              setDocumentType(value(documentType));
+            } else {
+              setDocumentType(value);
+            }
           }}
-          dropdownIconColor="#ffffff"
-        >
-          <Picker.Item label="Select Document Type" value="" />
-          {documentOptions.map((option) => (
-            <Picker.Item
-              key={option.value}
-              label={option.label}
-              value={option.value}
-            />
-          ))}
-        </Picker>
+          setItems={setItems}
+          placeholder="Select Document Type"
+          style={{
+            backgroundColor: 'transparent',
+            borderWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+          }}
+          dropDownContainerStyle={{
+            backgroundColor: '#fff',
+            borderWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderColor: '#fff',
+            zIndex: 6000,
+            ...(Platform.OS === 'android' && { marginTop: 4 }),
+          }}
+          arrowIconStyle={{
+            tintColor: '#fff',
+          }}
+          textStyle={{
+            color: '#fff',
+            fontSize: 16,
+          }}
+          searchTextInputStyle={{
+            color: '#355042',
+            backgroundColor: 'transparent',
+            borderWidth: 0,
+          }}
+          placeholderStyle={{
+            color: '#fff',
+          }}
+          listItemLabelStyle={{
+            color: '#355042',
+          }}
+          listItemContainerStyle={{
+            backgroundColor: 'transparent',
+          }}
+          listMessageContainerStyle={{
+            backgroundColor: 'transparent', // or any background you prefer
+          }}
+          listMessageTextStyle={{
+            color: '#4F6659', // custom text color
+            fontSize: 14,
+            fontWeight: '600',
+          }}
+          zIndex={9999}
+        />
       </PickerWrapper>
 
-      {/* Upload Button */}
       <UploadButton onPress={handleFileUpload}>
         <ButtonText>Upload Document</ButtonText>
       </UploadButton>
 
-      {/* File Name */}
-      {/* <FileNameText>
-        {documentName ? `File: ${documentName} (${fileExtension})` : "No file chosen"}
-      </FileNameText> */}
+      <FileNameText>
+        {documentName
+          ? `File: ${documentName} (${fileExtension})`
+          : 'No file chosen'}
+      </FileNameText>
     </Container>
   );
 };

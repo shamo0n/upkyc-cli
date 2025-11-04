@@ -167,7 +167,7 @@ const IDDetailsComponent = ({
       const liveData = await liveRes.json();
       console.log('[verifySelfie] Liveness response:', liveData);
       result.livenessPassed = liveData?.status === 'success';
-      result.livenessScore = Number(liveData?.liveness_score || 0);
+      result.livenessScore = Number(liveData?.score || 0);
 
       return result;
     } catch (err) {
@@ -178,6 +178,135 @@ const IDDetailsComponent = ({
   };
 
   // ========== pickImageFromPath - returns boolean (success) ==========
+  // const pickImageFromPath = async (
+  //   type: 'idFront' | 'idBack' | 'selfie',
+  //   uri: string,
+  //   base64: string,
+  //   updateStep?: (s: string) => void,
+  // ): Promise<boolean> => {
+  //   try {
+  //     setParentLoader?.(true);
+  //     console.log(`[pickImageFromPath] Type=${type} URI=${uri}`);
+
+  //     // --- ID front/back: just set + notify parent (no extra checks here) ---
+  //     if (type === 'idFront' || type === 'idBack') {
+  //       setIdImages(prev => ({ ...prev, [type]: uri }));
+  //       if (typeof onUpload === 'function') {
+  //         onUpload(type, { uri, base64: `data:image/jpeg;base64,${base64}` });
+  //       }
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: `${type} uploaded successfully.`,
+  //       });
+  //       return true;
+  //     }
+
+  //     // --- SELFIE: do verification logic & upload conditionally ---
+  //     if (type === 'selfie') {
+  //       // if ID front not present -> show message and abort
+  //       const idFrontUri = idImages.idFront;
+  //       if (!idFrontUri) {
+  //         Toast.show({
+  //           type: 'error',
+  //           text1: 'Please capture/upload ID front before taking selfie.',
+  //         });
+  //         return false;
+  //       }
+
+  //       // first attempt: run checks
+  //       if (selfieAttempts === 0) {
+  //         updateStep?.('Running face similarity and liveness checks...');
+  //         const v = await verifySelfie(uri, idFrontUri);
+  //         console.log('[pickImageFromPath] verifySelfie result:', v);
+
+  //         const SIM_THRESHOLD = 0.75;
+  //         const LIVENESS_THRESHOLD = 0.7;
+
+  //         const simOk = v.similar && v.score >= SIM_THRESHOLD;
+  //         const liveOk =
+  //           v.livenessPassed && v.livenessScore >= LIVENESS_THRESHOLD;
+
+  //         if (simOk && liveOk) {
+  //           // Passed both checks - upload
+  //           setIdImages(prev => ({ ...prev, selfie: uri }));
+  //           if (typeof onUpload === 'function') {
+  //             onUpload(
+  //               'selfie',
+  //               { uri, base64: `data:image/jpeg;base64,${base64}` },
+  //               {
+  //                 score: v.score,
+  //                 livenessScore: v.livenessScore,
+  //                 similar: v.similar,
+  //                 livenessPassed: v.livenessPassed,
+  //               },
+  //             );
+  //           }
+  //           Toast.show({
+  //             type: 'success',
+  //             text1: 'Selfie verified and uploaded.',
+  //           });
+  //           setSelfieAttempts(0);
+  //           // optionally advance step in parent when selfie is uploaded
+  //           setCurrentStep?.(
+  //             typeof currentStep === 'number' ? currentStep + 1 : undefined,
+  //           );
+  //           return true;
+  //         }
+
+  //         // If either check failed -> don't upload yet, increment attempt and return false so camera stays for retry
+  //         setSelfieAttempts(1);
+  //         let reason = 'Selfie verification failed.';
+  //         if (!simOk && !liveOk)
+  //           reason = 'Face not matched and liveness failed.';
+  //         else if (!simOk) reason = 'Face does not match ID front.';
+  //         else reason = 'Liveness check failed.';
+
+  //         Toast.show({
+  //           type: 'error',
+  //           text1: reason,
+  //           text2:
+  //             'Please retake your selfie. Second attempt will be accepted.',
+  //         });
+
+  //         // return false -> SelfieCamera will keep camera open for retry
+  //         return false;
+  //       }
+
+  //       // second attempt: accept and upload regardless of checks
+  //       if (selfieAttempts >= 1) {
+  //         setIdImages(prev => ({ ...prev, selfie: uri }));
+  //         if (typeof onUpload === 'function') {
+  //           onUpload(
+  //             'selfie',
+  //             { uri, base64: `data:image/jpeg;base64,${base64}` },
+  //             undefined,
+  //           );
+  //         }
+  //         Toast.show({
+  //           type: 'info',
+  //           text1: 'Second attempt accepted — selfie uploaded.',
+  //           text2:
+  //             'If verification failed previously, the selfie is accepted manually.',
+  //         });
+  //         // reset attempts
+  //         setSelfieAttempts(0);
+  //         setCurrentStep?.(
+  //           typeof currentStep === 'number' ? currentStep + 1 : undefined,
+  //         );
+  //         return true;
+  //       }
+  //     }
+
+  //     // fallback
+  //     return false;
+  //   } catch (err) {
+  //     console.error('[pickImageFromPath] ERROR', err);
+  //     Toast.show({ type: 'error', text1: 'Failed to process image.' });
+  //     return false;
+  //   } finally {
+  //     setParentLoader?.(false);
+  //   }
+  // };
   const pickImageFromPath = async (
     type: 'idFront' | 'idBack' | 'selfie',
     uri: string,
@@ -188,22 +317,163 @@ const IDDetailsComponent = ({
       setParentLoader?.(true);
       console.log(`[pickImageFromPath] Type=${type} URI=${uri}`);
 
-      // --- ID front/back: just set + notify parent (no extra checks here) ---
-      if (type === 'idFront' || type === 'idBack') {
+      // --- ID FRONT: must pass face detection check ---
+      if (type === 'idFront') {
+        updateStep?.('Running face detection...');
+        try {
+          const formData = new FormData();
+          formData.append('photo', {
+            uri,
+            type: 'image/jpeg',
+            name: 'idFront.jpg',
+          } as any);
+
+          const res = await fetch('https://api.luxand.cloud/photo/landmarks', {
+            method: 'POST',
+            headers: { token: LUXAND_TOKEN },
+            body: formData,
+          });
+
+          const data = await res.json();
+          console.log('[FaceDetection] response:', data);
+
+          if (!data?.landmarks || data.landmarks.length === 0) {
+            Toast.show({
+              type: 'error',
+              text1: 'No face detected on ID front.',
+              text2: 'Please retake a clear picture of the ID front.',
+            });
+            return false;
+          }
+
+          // ✅ Face found: upload and pass faceData to parent
+          setIdImages(prev => ({ ...prev, idFront: uri }));
+          if (typeof onUpload === 'function') {
+            onUpload(
+              'idFront',
+              { uri, base64: `data:image/jpeg;base64,${base64}` },
+              data, // Pass face detection response
+            );
+          }
+          Toast.show({
+            type: 'success',
+            text1: 'ID front uploaded successfully.',
+          });
+          return true;
+        } catch (err) {
+          console.error('[FaceDetection ERROR]', err);
+          Toast.show({
+            type: 'error',
+            text1: 'Face detection failed.',
+            text2: 'Please retake the photo or check network.',
+          });
+          return false;
+        } finally {
+          setParentLoader?.(false);
+        }
+      }
+
+      // --- ID BACK: upload directly (no face detection) ---
+      if (type === 'idBack') {
         setIdImages(prev => ({ ...prev, [type]: uri }));
         if (typeof onUpload === 'function') {
           onUpload(type, { uri, base64: `data:image/jpeg;base64,${base64}` });
         }
         Toast.show({
           type: 'success',
-          text1: `${type} uploaded successfully.`,
+          text1: 'ID back uploaded successfully.',
         });
         return true;
       }
 
-      // --- SELFIE: do verification logic & upload conditionally ---
+      // --- SELFIE: (keep your full selfie verification logic as-is) ---
+      // if (type === 'selfie') {
+      //   // same as before — do NOT change
+      //   const idFrontUri = idImages.idFront;
+      //   if (!idFrontUri) {
+      //     Toast.show({
+      //       type: 'error',
+      //       text1: 'Please capture/upload ID front before taking selfie.',
+      //     });
+      //     return false;
+      //   }
+
+      //   if (selfieAttempts === 0) {
+      //     updateStep?.('Running face similarity and liveness checks...');
+      //     const v = await verifySelfie(uri, idFrontUri);
+      //     console.log('[pickImageFromPath] verifySelfie result:', v);
+
+      //     const SIM_THRESHOLD = 0.85;
+      //     const LIVENESS_THRESHOLD = 0.8;
+
+      //     const simOk = v.similar && v.score >= SIM_THRESHOLD;
+      //     const liveOk =
+      //       v.livenessPassed && v.livenessScore >= LIVENESS_THRESHOLD;
+
+      //     if (simOk && liveOk) {
+      //       setIdImages(prev => ({ ...prev, selfie: uri }));
+      //       onUpload?.(
+      //         'selfie',
+      //         { uri, base64: `data:image/jpeg;base64,${base64}` },
+      //         {
+      //           score: v.score,
+      //           livenessScore: v.livenessScore,
+      //           similar: v.similar,
+      //           livenessPassed: v.livenessPassed,
+      //         },
+      //       );
+      //       Toast.show({
+      //         type: 'success',
+      //         text1: 'Selfie verified and uploaded.',
+      //       });
+      //       setSelfieAttempts(0);
+      //       if (typeof currentStep === 'number') {
+      //         setCurrentStep?.(currentStep + 1);
+      //       }
+
+      //       return true;
+      //     }
+
+      //     setSelfieAttempts(1);
+      //     let reason = 'Selfie verification failed.';
+      //     if (!simOk && !liveOk)
+      //       reason = 'Face not matched and liveness failed.';
+      //     else if (!simOk) reason = 'Face does not match ID front.';
+      //     else reason = 'Liveness check failed.';
+
+      //     Toast.show({
+      //       type: 'error',
+      //       text1: reason,
+      //       text2:
+      //         'Please retake your selfie. Second attempt will be accepted.',
+      //     });
+
+      //     return false;
+      //   }
+
+      //   // second attempt: accept anyway
+      //   if (selfieAttempts >= 1) {
+      //     setIdImages(prev => ({ ...prev, selfie: uri }));
+      //     onUpload?.(
+      //       'selfie',
+      //       { uri, base64: `data:image/jpeg;base64,${base64}` },
+      //       undefined,
+      //     );
+      //     Toast.show({
+      //       type: 'info',
+      //       text1: 'Second attempt accepted — selfie uploaded.',
+      //     });
+      //     setSelfieAttempts(0);
+      //     if (typeof currentStep === 'number') {
+      //       setCurrentStep?.(currentStep + 1);
+      //     }
+
+      //     return true;
+      //   }
+      // }
+      // --- SELFIE: (keep your full selfie verification logic as-is) ---
       if (type === 'selfie') {
-        // if ID front not present -> show message and abort
+        // same as before — do NOT change
         const idFrontUri = idImages.idFront;
         if (!idFrontUri) {
           Toast.show({
@@ -213,47 +483,43 @@ const IDDetailsComponent = ({
           return false;
         }
 
-        // first attempt: run checks
         if (selfieAttempts === 0) {
           updateStep?.('Running face similarity and liveness checks...');
           const v = await verifySelfie(uri, idFrontUri);
           console.log('[pickImageFromPath] verifySelfie result:', v);
 
-          const SIM_THRESHOLD = 0.75;
-          const LIVENESS_THRESHOLD = 0.7;
+          const SIM_THRESHOLD = 0.8;
+          const LIVENESS_THRESHOLD = 0.5;
 
           const simOk = v.similar && v.score >= SIM_THRESHOLD;
           const liveOk =
             v.livenessPassed && v.livenessScore >= LIVENESS_THRESHOLD;
 
           if (simOk && liveOk) {
-            // Passed both checks - upload
             setIdImages(prev => ({ ...prev, selfie: uri }));
-            if (typeof onUpload === 'function') {
-              onUpload(
-                'selfie',
-                { uri, base64: `data:image/jpeg;base64,${base64}` },
-                {
-                  score: v.score,
-                  livenessScore: v.livenessScore,
-                  similar: v.similar,
-                  livenessPassed: v.livenessPassed,
-                },
-              );
-            }
+            onUpload?.(
+              'selfie',
+              { uri, base64: `data:image/jpeg;base64,${base64}` },
+              {
+                score: v.score,
+                livenessScore: v.livenessScore,
+                similar: v.similar,
+                livenessPassed: v.livenessPassed,
+              },
+            );
             Toast.show({
               type: 'success',
               text1: 'Selfie verified and uploaded.',
             });
             setSelfieAttempts(0);
-            // optionally advance step in parent when selfie is uploaded
-            setCurrentStep?.(
-              typeof currentStep === 'number' ? currentStep + 1 : undefined,
-            );
+            if (typeof currentStep === 'number') {
+              setCurrentStep?.(currentStep + 1);
+            }
+
             return true;
           }
 
-          // If either check failed -> don't upload yet, increment attempt and return false so camera stays for retry
+          // Failed first attempt
           setSelfieAttempts(1);
           let reason = 'Selfie verification failed.';
           if (!simOk && !liveOk)
@@ -268,40 +534,51 @@ const IDDetailsComponent = ({
               'Please retake your selfie. Second attempt will be accepted.',
           });
 
-          // return false -> SelfieCamera will keep camera open for retry
+          // Store the first verification data for debugging/logging if needed
+          setLastVerification?.(v);
+
           return false;
         }
 
-        // second attempt: accept and upload regardless of checks
+        // --- SECOND ATTEMPT: accept but still run verifySelfie and pass its details ---
         if (selfieAttempts >= 1) {
+          updateStep?.('Rechecking selfie...');
+          const v = await verifySelfie(uri, idFrontUri);
+          console.log('[pickImageFromPath] second verifySelfie result:', v);
+
           setIdImages(prev => ({ ...prev, selfie: uri }));
-          if (typeof onUpload === 'function') {
-            onUpload(
-              'selfie',
-              { uri, base64: `data:image/jpeg;base64,${base64}` },
-              undefined,
-            );
-          }
+          onUpload?.(
+            'selfie',
+            { uri, base64: `data:image/jpeg;base64,${base64}` },
+            {
+              score: v.score,
+              livenessScore: v.livenessScore,
+              similar: v.similar,
+              livenessPassed: v.livenessPassed,
+            },
+          );
+
           Toast.show({
             type: 'info',
             text1: 'Second attempt accepted — selfie uploaded.',
-            text2:
-              'If verification failed previously, the selfie is accepted manually.',
           });
-          // reset attempts
           setSelfieAttempts(0);
-          setCurrentStep?.(
-            typeof currentStep === 'number' ? currentStep + 1 : undefined,
-          );
+          if (typeof currentStep === 'number') {
+            setCurrentStep?.(currentStep + 1);
+          }
+
           return true;
         }
       }
 
-      // fallback
       return false;
     } catch (err) {
       console.error('[pickImageFromPath] ERROR', err);
-      Toast.show({ type: 'error', text1: 'Failed to process image.' });
+      Toast.show({
+        type: 'error',
+        text1: 'Selfie does not match. Please try again.',
+        text2: 'Liveness check failed. Please upload a clear selfie.',
+      });
       return false;
     } finally {
       setParentLoader?.(false);
@@ -309,56 +586,130 @@ const IDDetailsComponent = ({
   };
 
   // ========== NAVIGATION TO CAMERA ==========
-  const navigateToCamera = (
+  // const navigateToCamera = (
+  //   screen: string,
+  //   type: 'idFront' | 'idBack' | 'selfie',
+  // ) => {
+  //   if (type === 'selfie') {
+  //     navigation.navigate('SelfieCamera', {
+  //       onSelfieTaken: async (
+  //         photoPath: string,
+  //         updateStep?: (s: string) => void,
+  //       ) => {
+  //         try {
+  //           setParentLoader?.(true);
+  //           updateStep?.('Processing selfie...');
+  //           const uri =
+  //             Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+  //           const base64 = await uriToBase64(uri);
+  //           const ok = await pickImageFromPath(
+  //             'selfie',
+  //             uri,
+  //             base64,
+  //             updateStep,
+  //           );
+  //           // return ok to camera (SelfieCamera expects boolean)
+  //           return ok;
+  //         } catch (err) {
+  //           console.error('[SelfieCamera onSelfieTaken] ERROR:', err);
+  //           Toast.show({ type: 'error', text1: 'Selfie processing failed.' });
+  //           return false;
+  //         } finally {
+  //           setParentLoader?.(false);
+  //         }
+  //       },
+  //     });
+  //   } else {
+  //     // ID front / back cameras use onReturn convention
+  //     navigation.navigate(screen, {
+  //       onReturn: async (photoPath: string) => {
+  //         try {
+  //           setParentLoader?.(true);
+  //           const uri =
+  //             Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+  //           const base64 = await uriToBase64(uri);
+  //           await pickImageFromPath(type, uri, base64);
+  //         } catch (err) {
+  //           console.error(`[${type}Camera onReturn] ERROR:`, err);
+  //           Toast.show({ type: 'error', text1: 'Error processing image.' });
+  //         } finally {
+  //           setParentLoader?.(false);
+  //         }
+  //       },
+  //     });
+  //   }
+  // };
+  // ========== NAVIGATION TO CAMERA (with permissions) ==========
+  const navigateToCamera = async (
     screen: string,
     type: 'idFront' | 'idBack' | 'selfie',
   ) => {
-    if (type === 'selfie') {
-      navigation.navigate('SelfieCamera', {
-        onSelfieTaken: async (
-          photoPath: string,
-          updateStep?: (s: string) => void,
-        ) => {
-          try {
-            setParentLoader?.(true);
-            updateStep?.('Processing selfie...');
-            const uri =
-              Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
-            const base64 = await uriToBase64(uri);
-            const ok = await pickImageFromPath(
-              'selfie',
-              uri,
-              base64,
-              updateStep,
-            );
-            // return ok to camera (SelfieCamera expects boolean)
-            return ok;
-          } catch (err) {
-            console.error('[SelfieCamera onSelfieTaken] ERROR:', err);
-            Toast.show({ type: 'error', text1: 'Selfie processing failed.' });
-            return false;
-          } finally {
-            setParentLoader?.(false);
-          }
-        },
-      });
-    } else {
-      // ID front / back cameras use onReturn convention
-      navigation.navigate(screen, {
-        onReturn: async (photoPath: string) => {
-          try {
-            setParentLoader?.(true);
-            const uri =
-              Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
-            const base64 = await uriToBase64(uri);
-            await pickImageFromPath(type, uri, base64);
-          } catch (err) {
-            console.error(`[${type}Camera onReturn] ERROR:`, err);
-            Toast.show({ type: 'error', text1: 'Error processing image.' });
-          } finally {
-            setParentLoader?.(false);
-          }
-        },
+    try {
+      // Ask for camera permission before continuing
+      const hasPermission = await requestCameraPermission();
+
+      if (!hasPermission) {
+        Toast.show({
+          type: 'error',
+          text1: 'Camera permission required',
+          text2: 'Please allow camera access to take a photo.',
+        });
+        return;
+      }
+
+      // ✅ If permission granted, navigate accordingly
+      if (type === 'selfie') {
+        navigation.navigate('SelfieCamera', {
+          onSelfieTaken: async (
+            photoPath: string,
+            updateStep?: (s: string) => void,
+          ) => {
+            try {
+              setParentLoader?.(true);
+              updateStep?.('Processing selfie...');
+              const uri =
+                Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+              const base64 = await uriToBase64(uri);
+              const ok = await pickImageFromPath(
+                'selfie',
+                uri,
+                base64,
+                updateStep,
+              );
+              return ok;
+            } catch (err) {
+              console.error('[SelfieCamera onSelfieTaken] ERROR:', err);
+              Toast.show({ type: 'error', text1: 'Selfie processing failed.' });
+              return false;
+            } finally {
+              setParentLoader?.(false);
+            }
+          },
+        });
+      } else {
+        navigation.navigate(screen, {
+          onReturn: async (photoPath: string) => {
+            try {
+              setParentLoader?.(true);
+              const uri =
+                Platform.OS === 'android' ? `file://${photoPath}` : photoPath;
+              const base64 = await uriToBase64(uri);
+              await pickImageFromPath(type, uri, base64);
+            } catch (err) {
+              console.error(`[${type}Camera onReturn] ERROR:`, err);
+              Toast.show({ type: 'error', text1: 'Error processing image.' });
+            } finally {
+              setParentLoader?.(false);
+            }
+          },
+        });
+      }
+    } catch (err) {
+      console.error('[navigateToCamera] ERROR:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to open camera.',
+        text2: 'Please check camera permissions in settings.',
       });
     }
   };

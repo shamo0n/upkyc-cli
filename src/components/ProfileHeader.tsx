@@ -46,7 +46,14 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   if (!profilePic) {
     return (
       <HeaderContainer>
-        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')}>
+        <TouchableOpacity
+          onPress={() =>
+            setTimeout(
+              () => navigation.navigate('Dashboard', { statusId: 'success' }),
+              1000,
+            )
+          }
+        >
           <BackText>Back</BackText>
         </TouchableOpacity>
       </HeaderContainer>

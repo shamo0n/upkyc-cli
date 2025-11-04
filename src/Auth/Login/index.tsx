@@ -4,6 +4,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { AuthContext } from '../../Contexts/AuthContext';
 import { CustomerSignupAPI } from '../../Helpers/API';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 import {
   Container,
@@ -167,58 +168,60 @@ const Login: React.FC = () => {
     }
   };
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 50 : 0}
+    <Background
+      source={require('../../Assets/images/mobilebg.jpg')}
+      resizeMode="cover"
     >
-      <Background
-        source={require('../../Assets/images/mobilebg.jpg')}
-        resizeMode="cover"
+      {loading && <LoadingSpinner />}
+      <KeyboardAwareScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        // enableOnAndroid={true}
+        extraScrollHeight={Platform.OS === 'ios' ? 80 : 0}
+        keyboardOpeningTime={100}
       >
-        {loading && <LoadingSpinner />}
+        <LoginBoxContainer>
+          <Logo source={require('../../Assets/images/up-logo.png')} />
+          <Title>Get Started</Title>
+          <Subtitle>
+            Enter your email to begin onboarding or continue where you left off
+          </Subtitle>
 
-        <Container
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            flexGrow: 1,
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 20,
-          }}
-        >
-          <LoginBoxContainer>
-            <Logo source={require('../../Assets/images/up-logo.png')} />
-            <Title>Get Started</Title>
-            <Subtitle>
-              Enter your email to begin onboarding or continue where you left
-              off
-            </Subtitle>
+          <InputContainer>
+            <Input
+              value={email}
+              placeholder="Email Address"
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              onChangeText={handleEmailChange}
+            />
+            {suggestions.length > 0 && (
+              <Suggestions>
+                {suggestions.map((s, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => {
+                      setEmail(s);
+                      setSuggestions([]);
+                    }}
+                  >
+                    <SuggestionText>{s}</SuggestionText>
+                  </TouchableOpacity>
+                ))}
+              </Suggestions>
+            )}
+          </InputContainer>
 
-            <InputContainer>
-              <Input
-                value={email}
-                placeholder="Email Address"
-                placeholderTextColor="rgba(255,255,255,0.6)"
-                onChangeText={handleEmailChange}
-              />
-              {suggestions.length > 0 && (
-                <Suggestions>
-                  {suggestions.map((s, i) => (
-                    <TouchableOpacity key={i} onPress={() => setEmail(s)}>
-                      <SuggestionText>{s}</SuggestionText>
-                    </TouchableOpacity>
-                  ))}
-                </Suggestions>
-              )}
-            </InputContainer>
-
-            {errorMessage ? <ErrorText>{errorMessage}</ErrorText> : null}
-            <AnimatedButton title="Begin" onPress={handleSignup} />
-          </LoginBoxContainer>
-        </Container>
-      </Background>
-    </KeyboardAvoidingView>
+          {errorMessage ? <ErrorText>{errorMessage}</ErrorText> : null}
+          <AnimatedButton title="Begin" onPress={handleSignup} />
+        </LoginBoxContainer>
+      </KeyboardAwareScrollView>
+    </Background>
   );
 };
 

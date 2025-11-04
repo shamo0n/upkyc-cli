@@ -96,7 +96,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [showModal, setShowModal] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [slideAnim] = useState(new Animated.Value(0));
-  const qrRef = useRef<ViewShot>(null);
+  // const qrRef = useRef<ViewShot>(null);
+  const qrSvgRef = useRef<any>(null);
 
   useEffect(() => {
     if (authUser) fetchCustomerProfile();
@@ -120,18 +121,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       const extractValue = (name: string) =>
         resultChildren.find((c: any) => c.name === name)?.value || '';
+      const formatDOB = (dob: string) => {
+        if (!dob) return '';
+        const match = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (match) {
+          const [, month, day, year] = match;
+          return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+        }
+        return dob;
+      };
+
+      const rawDOB = extractValue('DOB');
+      const formattedDOB = formatDOB(rawDOB);
+
       setCustomerProfile({
         FirstName: extractValue('FIRST_NAME'),
         MiddleName: extractValue('MIDLE_NAME'),
         LastName: extractValue('LAST_NAME'),
         Gender: extractValue('Gender'),
-        DOB: extractValue('DOB'),
+        DOB: formattedDOB,
         Phone: extractValue('PHONE'),
         Country: extractValue('COUNTRY'),
-        Province: extractValue('PROVINCE_OR_STATE'),
+        Province: extractValue('Province'),
         City: extractValue('CITY'),
         Citizenship: extractValue('CITIZENSHIP'),
-        StreetAddress: extractValue('REGISTERED_OFFICE_ADDRESS'),
+        StreetAddress: extractValue('StreetAddress'),
         SELFIE_FILEPATH: extractValue('SELFIE_URL'),
         IDFRONT_FILEPATH: extractValue('ID_FRONT_URL'),
         IDBACK_FILEPATH: extractValue('ID_BACK_URL'),
@@ -242,19 +256,45 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     openShareSheet(); // show bottom sheet first
   };
 
+  // const handleShareQRCode = async () => {
+  //   try {
+  //     if (!qrRef.current) return;
+  //     const uri = await captureRef(qrRef, { format: 'png', quality: 1 });
+  //     await Share.open({
+  //       url: `file://${uri}`,
+  //       type: 'image/png',
+  //       title: 'My QR Code',
+  //       failOnCancel: false,
+  //     });
+  //     closeShareSheet();
+  //   } catch (error) {
+  //     console.error(' Share Error:', error);
+  //     Alert.alert('Error', 'Failed to share QR image');
+  //   }
+  // };
   const handleShareQRCode = async () => {
     try {
-      if (!qrRef.current) return;
-      const uri = await captureRef(qrRef, { format: 'png', quality: 1 });
-      await Share.open({
-        url: `file://${uri}`,
-        type: 'image/png',
-        title: 'My QR Code',
-        failOnCancel: false,
+      if (!qrSvgRef.current) return;
+
+      // 1️⃣ Get the base64 image data directly from the QRCode component
+      qrSvgRef.current.toDataURL(async (data: string) => {
+        const path = `${RNFS.CachesDirectoryPath}/qrcode.png`;
+
+        // 2️⃣ Write the base64 data to a PNG file
+        await RNFS.writeFile(path, data, 'base64');
+
+        // 3️⃣ Share the file
+        await Share.open({
+          url: `file://${path}`,
+          type: 'image/png',
+          title: 'My QR Code',
+          failOnCancel: false,
+        });
+
+        closeShareSheet();
       });
-      closeShareSheet();
     } catch (error) {
-      console.error(' Share Error:', error);
+      console.error('Share Error:', error);
       Alert.alert('Error', 'Failed to share QR image');
     }
   };
@@ -350,23 +390,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
         {/* 🔹 QR SECTION */}
         <QRContainer>
-          <ViewShot
-            ref={qrRef}
-            options={{ format: 'png', quality: 1, result: 'tmpfile' }}
-          >
-            <QRSection>
-              <QRBox>
-                <QRCode
-                  value={
-                    customerProfile.iscaseRejected !== '0'
-                      ? `https://amlhlep.com/OnBoarding_AML/site/OTP.html?CUSTOMER_GID=${customerProfile.Email}`
-                      : `https://amlhlep.com/OnBoarding_AML/site/waiting.html`
-                  }
-                  size={80}
-                />
-              </QRBox>
-            </QRSection>
-          </ViewShot>
+          <QRSection>
+            <QRBox>
+              <QRCode
+                value={
+                  customerProfile.iscaseRejected !== '0'
+                    ? `https://amlhlep.com/OnBoarding_AML/site/OTP.html?CUSTOMER_GID=${customerProfile.Email}`
+                    : `https://amlhlep.com/OnBoarding_AML/site/waiting.html`
+                }
+                size={100}
+                backgroundColor="white"
+                getRef={ref => (qrSvgRef.current = ref)}
+              />
+            </QRBox>
+          </QRSection>
 
           <Actions>
             <ActionButton onPress={handleShareQRCode}>
@@ -376,7 +413,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
             <ActionButton onPress={handleDownloadPDF}>
               <RshareIcon width={16} height={16} />
-              <ButtonText>Share</ButtonText>
+              <ButtonText>Shares</ButtonText>
             </ActionButton>
           </Actions>
         </QRContainer>

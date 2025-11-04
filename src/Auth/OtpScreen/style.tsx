@@ -48,10 +48,9 @@ export const LoginBoxContainer = styled(View).attrs(() => ({
 // ScrollView with content styles
 export const Container = styled(ScrollView).attrs({
   contentContainerStyle: {
-    flexGrow: 1,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
   },
 })``;
 
@@ -98,7 +97,6 @@ export const OtpBold = styled.Text`
 export const OtpInputContainer = styled.View`
   flex-direction: row;
   justify-content: space-between;
-  width: 80%;
   margin-bottom: 20px;
 `;
 
@@ -133,11 +131,12 @@ export const ButtonText = styled.Text`
   letter-spacing: 1px;
 `;
 
-export const ResendButton = styled.TouchableOpacity``;
+export const ResendButton = styled.TouchableOpacity`
+margin-top: 10px;
+`;
 
 export const ResendText = styled.Text`
   color: #fff;
-  text-decoration: underline;
   font-weight: 700;
 `;
 

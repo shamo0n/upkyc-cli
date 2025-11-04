@@ -33,9 +33,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
   onSupportClick,
   onLogoutClick,
 }) => {
-  const profileImage = customerProfile?.SELFIE_FILEPATH
-    ? `data:image/*;base64,${customerProfile.SELFIE_FILEPATH}`
-    : null;
+  console.log('customerProfile', customerProfile);
+  const profileImage = customerProfile?.SELFIE_URL;
 
   return (
     <View style={styles.menuContainer}>
@@ -46,10 +45,16 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </TouchableOpacity>
 
         {profileImage ? (
-          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <Image
+            source={{ uri: profileImage }}
+            style={styles.profileImage}
+            onError={e => {
+              console.warn('Failed to load selfie:', e.nativeEvent.error);
+            }}
+          />
         ) : (
           <View style={styles.profilePlaceholder}>
-            <Icon name="user" size={30} color="#ccc" />
+            <Icon name="user" size={30} color="#fff" />
           </View>
         )}
       </View>

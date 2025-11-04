@@ -233,15 +233,24 @@ const Dashboard: React.FC = () => {
       customerProfile?.StatusID === '3' ||
       customerProfile?.StatusID === '2'
     ) {
-      Toast.show({ text1: 'CAMLO review pending.' });
+      Toast.show({
+        type: 'error',
+        text1: 'CAMLO review pending.',
+        text2: 'Please wait for the review to complete.',
+      });
     } else {
-      Toast.show({ type: 'success', text1: 'CAMLO review completed.' });
+      Toast.show({
+        type: 'success',
+        text1: 'CAMLO review completed.',
+      });
     }
   };
+
   const handleOnboardingClick = () => {
+    console.log('@@@@@customerProfile', customerProfile);
     const isMatchValid = customerProfile?.MatchConfidence > 0.8;
     const isLivenessValid =
-      customerProfile?.livenessResult === 'real' &&
+      customerProfile?.livenessResult === 'success' &&
       customerProfile?.livenessScore > 0.8;
 
     if (isMatchValid && isLivenessValid) {
@@ -371,6 +380,7 @@ const Dashboard: React.FC = () => {
           <WelcomeText>Welcome</WelcomeText>
           <NameText>
             {customerProfile?.FirstName || 'User'}{' '}
+            {customerProfile?.MiddleName || ''}{' '}
             {customerProfile?.LastName || ''}
           </NameText>
           <Text
@@ -400,16 +410,18 @@ const Dashboard: React.FC = () => {
                 <View
                   style={{
                     marginTop: 12,
-                    width: 150,
-                    height: 20,
+                    width: '100%',
+                    maxWidth: 160,
+                    height: 18,
                     justifyContent: 'center',
                   }}
                 >
                   {/* Progress Bar */}
                   <Progress.Bar
                     progress={item.progress / 100} // 0-1 scale
-                    width={150}
-                    height={20}
+                    width={null} // auto
+                    style={{ width: '100%' }}
+                    height={18}
                     color="rgb(110,129,123)"
                     unfilledColor="#ccc"
                     borderWidth={0}

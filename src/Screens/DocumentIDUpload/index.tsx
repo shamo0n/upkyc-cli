@@ -23,6 +23,7 @@ import {
 } from './style';
 import { RootStackParamList } from '../../components/Routes';
 import AppHeader from '../../components/AppHeader';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 type NavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -56,34 +57,34 @@ const DocumentIDUpload: React.FC = () => {
   }, [route.params]);
 
   const handleCancel = () => navigation.goBack();
-  const handleSkip = () => navigation.navigate('Dashboard');
-
-  // Update Identification Info API
-  const handleUpdateIdentificationInfoAPI = async () => {
-    if (!idType) return;
-    const body = {
-      CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-      Email: authUser?.Email,
-      IdentificationTypeID: idType,
-      IdentificationTypeName:
-        idType === '7'
-          ? 'Drivers Licence'
-          : idType === '4'
-          ? 'Citizenship Card'
-          : idType === '5'
-          ? 'Passport'
-          : '',
-    };
-
-    try {
-      await UpdateIdentificationInfoAPI(body);
-    } catch (err) {
-      console.error('Error updating identification info:', err);
-    }
+  const handleSkip = () =>
+    navigation.navigate('Dashboard', { statusId: 'success' });
+  const handleUpdateIdentificationInfoAPI = (idTypeValue: number | string) => {
+    return new Promise<void>((resolve, reject) => {
+      const body = {
+        CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
+        Email: authUser?.Email,
+        IdentificationTypeID: idTypeValue,
+        IdentificationTypeName:
+          idType === 7
+            ? 'Drivers Licence'
+            : idType === 4
+            ? 'Citizenship Card'
+            : idType === 5
+            ? 'Passport'
+            : '',
+      };
+      UpdateIdentificationInfoAPI(body, (res: any) => {
+        if (res?.responseBody?.children?.length) resolve();
+        else reject('Failed to update ID info');
+      });
+    });
   };
-
-  // Upload individual ID/selfie images
-  const handleIdUpload = async (imageType: string, base64Data: string) => {
+  const handleIdUpload = async (
+    imageType: string,
+    base64Data: string,
+    faceData?: any,
+  ) => {
     const idMap = {
       idFront: { IDTypeID: 97, name: 'idfront.png', desc: 'ID Card Front' },
       idBack: { IDTypeID: 98, name: 'idback.png', desc: 'ID Card Back' },
@@ -106,18 +107,24 @@ const DocumentIDUpload: React.FC = () => {
       doc_Base64: base64Data.replace(/^data:image\/[a-z]+;base64,/, ''),
     };
 
-    // Additional Selfie Verification Checks
+    const fd = faceData || formData.faceData;
+
     if (imageType === 'selfie') {
-      const faceData = formData.faceData; // Assuming faceData is set in IDDetailsComponent
-      const livenessResult = faceData?.liveness?.result ?? 'unknown';
-      const livenessScore = faceData?.liveness?.score ?? 0;
-      const matchScore = faceData?.match?.score ?? 0;
-      const similar = faceData?.match?.similar ?? false;
+      const livenessResult = fd?.livenessStatus ?? 'unknown';
+      const livenessScore = fd?.livenessScore ?? 0;
+      const matchScore = fd?.similarityScore ?? 0;
+      const similar = fd?.similar ?? false;
+
+      console.log('@faceData', fd);
+      console.log('@livenessResult', livenessResult);
+      console.log('@livenessScore', livenessScore);
+      console.log('@matchScore', matchScore);
+      console.log('@similar', similar);
 
       if (
         !(
-          livenessResult === 'real' &&
-          livenessScore >= 0.8 &&
+          livenessResult === 'success' &&
+          livenessScore > 0.8 &&
           matchScore > 0.5 &&
           similar
         )
@@ -128,7 +135,7 @@ const DocumentIDUpload: React.FC = () => {
             2,
           )}), Match: ${matchScore.toFixed(2)}`,
         });
-        setFormData((prev: any) => ({ ...prev, selfie: null }));
+        setFormData(prev => ({ ...prev, selfie: null }));
         return;
       }
 
@@ -140,9 +147,22 @@ const DocumentIDUpload: React.FC = () => {
     try {
       setLoading(true);
       await SaveSignupDocumentAPI(body, data => {
-        console.log('[SaveSignupDocumentAPI Response]', data);
-        if (!data?.IsErrorMessage) {
-          Toast.show({ type: 'success', text1: `${cfg.desc} uploaded!` });
+        const success =
+          data?.IsErrorMessage === false ||
+          data?.Success === true ||
+          data?.Status?.toLowerCase?.() === 'success' ||
+          !data?.Message?.toLowerCase?.().includes('error');
+
+        if (success) {
+          // Toast.show({ type: 'success', text1: `${cfg.desc} uploaded!` });
+
+          // ✅ Navigate to dashboard after selfie upload success
+          if (imageType === 'selfie') {
+            setIsSelfieUploaded(true);
+            setTimeout(() => {
+              navigation.navigate('Dashboard', { statusId: 'success' });
+            }, 800); // small delay for toast visibility
+          }
         } else {
           Toast.show({
             type: 'error',
@@ -150,8 +170,6 @@ const DocumentIDUpload: React.FC = () => {
           });
         }
       });
-
-      if (imageType === 'selfie') setIsSelfieUploaded(true);
     } catch (err) {
       console.error('[Upload Error]', err);
       Toast.show({ type: 'error', text1: 'Upload failed' });
@@ -160,22 +178,24 @@ const DocumentIDUpload: React.FC = () => {
     }
   };
 
-  // Unified Image Upload Handler
-  // const handleImageUpload = async (type: string, data: any, faceData?: any) => {
-  //   setFormData(prev => ({ ...prev, [type]: data, faceData }));
-  //   await handleUpdateIdentificationInfoAPI();
-  //   await handleIdUpload(type, data);
-  // };
   const handleImageUpload = async (
     type: string,
     data: { uri: string; base64: string },
     faceData?: any,
   ) => {
     console.log('🆙 Upload complete:', type, data.uri);
+    console.log('Received from child:', type, data, faceData);
 
-    setFormData(prev => ({ ...prev, [type]: data.base64, faceData }));
-    await handleUpdateIdentificationInfoAPI();
-    await handleIdUpload(type, data.base64);
+    // ✅ Save to formData for later reference
+    setFormData(prev => ({
+      ...prev,
+      [type]: data.base64,
+      faceData: faceData || prev.faceData,
+    }));
+
+    // ✅ Continue upload immediately with provided data
+    await handleUpdateIdentificationInfoAPI(idType);
+    await handleIdUpload(type, data.base64, faceData);
   };
 
   const handleDocumentUpload = (data: any) => {
@@ -214,18 +234,20 @@ const DocumentIDUpload: React.FC = () => {
 
   return (
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
+      <AppHeader showBack={true} onBackPress={handleCancel} />
+      {loading && <LoadingSpinner />}
+
       <Container>
-        <AppHeader showBack={true} onBackPress={handleCancel} />
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            width: '100%',
-            alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingBottom: 40,
+            alignItems: 'stretch',
+            paddingHorizontal: 16,
+            paddingBottom: 60,
           }}
+          showsVerticalScrollIndicator={false}
         >
-          <Box style={{ width: '100%' }}>
+          <Box>
             {currentStep === 5 && (
               <>
                 <Title>Upload ID & Selfie</Title>

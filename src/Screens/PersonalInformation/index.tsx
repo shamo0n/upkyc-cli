@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, ToastAndroid, Platform } from 'react-native';
+import {
+  ScrollView,
+  ToastAndroid,
+  Platform,
+  View,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import {
   Container,
@@ -20,6 +28,7 @@ import IDTypeComponent from '../../components/IDDetails/IDTypeComponent';
 import DocumentUploadComponent from '../../components/DocumentUploadComponent';
 import Toast from 'react-native-toast-message';
 import { useAuth } from '../../Contexts/AuthContext';
+import RNFS from 'react-native-fs';
 
 import {
   getCountriesListAPI,
@@ -32,6 +41,9 @@ import {
 import ProgressLoadbar from '../../components/ProgressLoadbar';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import AppHeader from '../../components/AppHeader';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../components/Routes';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 type FormDataType = {
   firstName?: string;
@@ -58,7 +70,9 @@ type FaceData = {
 };
 
 const PersonalInformationScreen = () => {
-  const navigation = useNavigation();
+  type PersonalInfoNavProp = NativeStackNavigationProp<RootStackParamList>;
+
+  const navigation = useNavigation<PersonalInfoNavProp>();
   const { authUser } = useAuth();
 
   // ===================== STATES =====================
@@ -128,15 +142,23 @@ const PersonalInformationScreen = () => {
 
   // ===================== API HANDLERS =====================
   const handlePersonalInformation = async () => {
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.dob ||
-      !formData.gender
-    ) {
-      showToast('Please fill in all fields.');
+    const newError: any = {};
+
+    if (!formData.firstName) newError.firstName = 'First name is required';
+    if (!formData.lastName) newError.lastName = 'Last name is required';
+    if (!formData.dob) newError.dob = 'Date of birth is required';
+    if (!formData.gender) newError.gender = 'Gender is required';
+    if (!formData.citizenship) newError.citizenship = 'Citizenship is required';
+
+    // If any errors found — update state and stop
+    if (Object.keys(newError).length > 0) {
+      setError(newError);
+      showToast('Please fill in all required fields');
       return Promise.reject('Validation error');
     }
+
+    // Clear errors before submit
+    setError({});
 
     const body = {
       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
@@ -150,25 +172,38 @@ const PersonalInformationScreen = () => {
     };
 
     setLoading(true);
-    return new Promise<boolean>((resolve, reject) => {
-      UpdatePersonalInfoAPI(body, (response: any) => {
-        setLoading(false);
-        const children = response?.responseBody?.children?.[0]?.children || [];
-        const messageCode = children.find(
-          (c: any) => c.name === 'MessageCode',
-        )?.value;
-        const message =
-          children.find((c: any) => c.name === 'Message')?.value || '';
 
-        if (messageCode === '2') {
-          showToast(message || 'Personal Info Saved');
-          resolve(true);
-        } else {
-          showToast(message || 'Save Failed');
-          reject(false);
-        }
+    try {
+      const response: any = await new Promise((resolve, reject) => {
+        UpdatePersonalInfoAPI(body, (resp: any) => {
+          if (resp) resolve(resp);
+          else reject(new Error('No response from API'));
+        });
       });
-    });
+
+      const children = response?.responseBody?.children?.[0]?.children ?? [];
+      const messageCode =
+        children.find((c: any) => c.name === 'MessageCode')?.value || '';
+      const message =
+        children.find((c: any) => c.name === 'Message')?.value || '';
+      const isErrorMessage =
+        children.find((c: any) => c.name === 'IsErrorMessage')?.value ===
+        'true';
+
+      if (messageCode === '2' && !isErrorMessage) {
+        showToast(message || 'Personal Info Saved');
+        return true;
+      } else {
+        showToast(message || 'Save Failed');
+        throw new Error(message || 'Save Failed');
+      }
+    } catch (error: any) {
+      console.error('handlePersonalInformation error:', error);
+      showToast('Failed to save personal info.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContactInformation = async () => {
@@ -210,16 +245,102 @@ const PersonalInformationScreen = () => {
     });
   };
 
+  // const handleAddressInformation = async () => {
+  //   const newError: any = {};
+
+  //   if (!formData.streetAddress)
+  //     newError.streetAddress = 'Street address is required';
+  //   if (!formData.city) newError.city = 'City is required';
+  //   if (!formData.countryId) newError.countryId = 'Country is required';
+  //   if (!formData.postalCode) newError.postalCode = 'Postal code is required';
+
+  //   if (Object.keys(newError).length > 0) {
+  //     setError(newError);
+  //     showToast('Please fill in all required fields');
+  //     return Promise.reject('Validation error');
+  //   }
+
+  //   setError({}); // clear errors before proceeding
+
+  //   const body = {
+  //     CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
+  //     Email: authUser?.Email,
+  //     StreetAddress: formData.streetAddress,
+  //     City: formData.city,
+  //     Province: formData.provinceOrState || '',
+  //     PostalCode: formData.postalCode || '',
+  //     CountryId: formData.countryId || '',
+  //     POBox: formData.postalCode || '',
+  //   };
+
+  //   setLoading(true);
+  //   return new Promise<boolean>((resolve, reject) => {
+  //     UpdateAddressInfoAPI(body, (response: any) => {
+  //       setLoading(false);
+  //       const children = response?.responseBody?.children?.[0]?.children || [];
+  //       const messageCode = children.find(
+  //         (c: any) => c.name === 'MessageCode',
+  //       )?.value;
+  //       const message =
+  //         children.find((c: any) => c.name === 'Message')?.value || '';
+
+  //       if (messageCode === '2') {
+  //         showToast(message || 'Address Saved');
+  //         resolve(true);
+  //       } else {
+  //         showToast(message || 'Failed to Save');
+  //         reject(false);
+  //       }
+  //     });
+  //   });
+  // };
   const handleAddressInformation = async () => {
+    const newError: any = {};
+
+    const safeTrim = (val?: string | number) => (val ? String(val).trim() : '');
+
+    const streetAddress = safeTrim(formData.streetAddress);
+    const city = safeTrim(formData.city);
+    const provinceOrState = safeTrim(formData.provinceOrState);
+    const postalCode = safeTrim(formData.postalCode);
+    const countryId = formData.countryId;
+
+    if (!streetAddress) newError.streetAddress = 'Street address is required';
+    if (!city) newError.city = 'City is required';
+    if (!countryId) newError.countryId = 'Country is required';
+    if (!postalCode) newError.postalCode = 'Postal code is required';
+
+    // ✅ Province/State validation — handles both dropdown & text
+    if (!provinceOrState) {
+      newError.provinceOrState = 'Province / State is required';
+    }
+
+    // ✅ Canada-specific postal code validation
+    if (countryId === canadaId && postalCode) {
+      const canadaPostalRegex = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
+      if (!canadaPostalRegex.test(postalCode)) {
+        newError.postalCode = 'Invalid Canadian postal code. Example: A1A 1A1';
+      }
+    }
+
+    // ✅ If there are any errors, block progression
+    if (Object.keys(newError).length > 0) {
+      setError(newError);
+      showToast('Please fill in all required fields correctly');
+      return Promise.reject('Validation error');
+    }
+
+    setError({}); // clear previous errors
+
     const body = {
       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
       Email: authUser?.Email,
-      StreetAddress: formData.streetAddress,
-      City: formData.city,
-      Province: formData.provinceOrState || '',
-      PostalCode: formData.postalCode || '',
-      CountryId: formData.countryId || '',
-      POBox: formData.postalCode || '',
+      StreetAddress: streetAddress,
+      City: city,
+      Province: provinceOrState,
+      PostalCode: postalCode,
+      CountryId: countryId,
+      POBox: postalCode,
     };
 
     setLoading(true);
@@ -243,6 +364,7 @@ const PersonalInformationScreen = () => {
       });
     });
   };
+
   const handleSelectIdType = type => {
     // console.log("SELECTEDTYPE>>><<<<<<<", type);
     if (type === 'id-card') {
@@ -279,24 +401,36 @@ const PersonalInformationScreen = () => {
   const handleImageUpload = async (
     imageType: 'idFront' | 'idBack' | 'selfie',
     data: { uri: string; base64: string },
-    faceData?: FaceData,
+    faceData?: {
+      score?: number;
+      livenessScore?: number;
+      similar?: boolean;
+      livenessPassed?: boolean;
+    },
   ) => {
     console.log('Uploading type:', imageType);
+    console.log('faceData@@@@@:', faceData);
+    console.log('similar:', faceData?.similar);
+    console.log('score:', faceData?.score);
+    console.log('livenessScore:', faceData?.livenessScore);
+    console.log('livenessPassed:', faceData?.livenessPassed);
 
     try {
       setLoading(true);
       if (!idType) throw new Error('ID type not selected');
 
-      // Update identification info before upload
       await handleUpdateIdentificationInfoAPI(idType);
       if (!data.base64) throw new Error('Base64 data missing');
+
       // Save base64 to formData
       setFormData(prev => ({ ...prev, [imageType]: data.base64 }));
+
       // Prepare upload body
       const cleanBase64 = data.base64.replace(
         /^data:image\/[a-z]+;base64,/,
         '',
       );
+
       const body: any = {
         IDTypeID:
           imageType === 'idFront' ? 97 : imageType === 'idBack' ? 98 : 99,
@@ -316,17 +450,23 @@ const PersonalInformationScreen = () => {
         remarks: 'uploaded from digital onboarding',
         doc_MASTER_DETAILS:
           imageType === 'selfie' ? 'Selfie Image' : `ID ${imageType} image`,
-        livenessScore: faceData?.liveness?.score,
-        livenessResult: faceData?.liveness?.result,
-        MatchPercentage: faceData?.score,
+
+        MatchPercentage: faceData?.score, // Face similarity score
+        livenessScore: faceData?.livenessScore, // Liveness score
+        livenessResult: faceData?.livenessPassed, // Boolean (true/false)
       };
 
-      console.log('Uploading to backend...');
+      console.log('Uploading to backend with:', body);
+
       SaveSignupDocumentAPI(body, (response: any) => {
         const children = response?.responseBody?.children || [];
+        console.log('@children', children);
+
         const messageCode = children.find(
           (c: any) => c.name === 'MessageCode',
         )?.value;
+        console.log('@messageCode', messageCode);
+
         const message =
           children.find((c: any) => c.name === 'Message')?.value || '';
 
@@ -360,113 +500,146 @@ const PersonalInformationScreen = () => {
     }
   };
 
-  const handleProofOfDocumentUpload = async (
-    base64Data?: string,
-    imageType?: string,
-  ) => {
-    console.log('Form Data on Submit:', formData);
-
-    if (!formData.documentType) {
-      const errorMsg = 'Please select a document type before proceeding.';
-      setError(errorMsg);
-      Toast.show({ type: 'error', text1: errorMsg });
-      return;
-    }
-
-    if (!formData.document) {
-      const errorMsg = 'Please select document before proceeding.';
-      setError(errorMsg);
-      Toast.show({ type: 'error', text1: errorMsg });
-      return;
-    }
-
-    // Remove Base64 prefix
-    const removeBase64Prefix = (base64String?: string) => {
-      if (
-        base64String &&
-        base64String.match(
-          /^data:(image\/(png|jpeg|jpg|gif|bmp|webp)|application\/pdf);base64,/,
-        )
-      ) {
-        return base64String.split(',')[1];
-      }
-      console.error('Invalid base64 string');
-      return null;
-    };
-
-    const cleanBase64 = removeBase64Prefix(formData.document);
-    if (!cleanBase64) {
-      const errorMsg = 'Invalid image format.';
-      setError(errorMsg);
-      Toast.show({ type: 'error', text1: errorMsg });
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    const body = {
-      IDTypeID: imageType || '100',
-      CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-      Email: authUser?.Email,
-      Doccument_type: formData.documentType,
-      Document_NO: '',
-      Document_issue_Date: '',
-      Document_expiry_Date: '',
-      doc_MASTER_DETAILS: 'proof of document',
-      remarks: 'Uploaded from digital onboarding',
-      doc_name: formData.documentName,
-      doc_Base64: cleanBase64,
-      MatchPercentage: '',
-    };
-
+  const handleProofOfDocumentUpload = async () => {
     try {
-      await SaveSignupDocumentAPI(body, (response: any) => {
-        console.log('Response Body:', response);
+      setLoading(true);
 
-        if (!response || !response.responseBody?.children) {
-          const errorMsg =
-            "We couldn't load your data. Please refresh or try again later.";
-          setError(errorMsg);
-          Toast.show({ type: 'error', text1: errorMsg });
-          return;
+      if (!formData?.documentType)
+        throw new Error('Please select a document type.');
+
+      const document = formData?.document;
+      if (!document?.uri) throw new Error('Please select a document.');
+
+      let fileUri = document.uri;
+      let inboxPathToDelete = null;
+      console.log('Selected document URI:', fileUri);
+
+      // Handle iOS Inbox copy logic
+      if (Platform.OS === 'ios' && fileUri.includes('Inbox')) {
+        try {
+          const inboxPath = decodeURIComponent(fileUri.replace('file://', ''));
+          const exists = await RNFS.exists(inboxPath);
+
+          if (exists) {
+            const originalName = document.name?.trim() || 'document.pdf';
+            const fileExt = originalName.includes('.')
+              ? '.' + originalName.split('.').pop()
+              : '';
+            const baseName = originalName.replace(fileExt, '');
+            let fileName = `${baseName}${fileExt}`;
+            let destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+            // Handle duplicate filenames
+            let counter = 1;
+            while (await RNFS.exists(destPath)) {
+              fileName = `${baseName}_${counter}${fileExt}`;
+              destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+              counter++;
+            }
+
+            await RNFS.copyFile(inboxPath, destPath);
+            console.log('✅ File copied to:', destPath);
+
+            inboxPathToDelete = inboxPath;
+            fileUri = destPath;
+          } else {
+            console.warn('❌ Inbox file not found or already removed.');
+          }
+        } catch (err) {
+          console.log('⚠️ iOS file copy error:', err.message);
         }
+      }
 
-        const responseBody = response.responseBody.children;
-        const messageCode = responseBody.find(
-          (child: any) => child.name === 'MessageCode',
-        )?.value;
-        const isErrorMessage = responseBody.find(
-          (child: any) => child.name === 'IsErrorMessage',
-        )?.value;
-        const message =
-          responseBody.find((child: any) => child.name === 'Message')?.value ||
-          'An error occurred.';
-        const messageDetails =
-          responseBody.find((child: any) => child.name === 'MessageDetails')
-            ?.value || '';
+      // Verify the file exists
+      const normalizedPath = fileUri.replace('file://', '');
+      const fileExists = await RNFS.exists(normalizedPath);
+      if (!fileExists)
+        throw new Error('The selected document could not be found on disk.');
 
-        if (messageCode === '2' && isErrorMessage === 'false') {
-          Toast.show({
-            type: 'success',
-            text1: message || 'Document uploaded successfully!',
+      // Convert to Base64
+      const base64Data = await RNFS.readFile(normalizedPath, 'base64');
+
+      // Prepare body
+      const body = {
+        IDTypeID: 100,
+        CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
+        Email: authUser?.Email,
+        Doccument_type: formData.documentType,
+        Document_NO: '',
+        Document_issue_Date: '',
+        Document_expiry_Date: '',
+        doc_name: document.name || 'document.pdf',
+        doc_Base64: base64Data,
+        remarks: 'uploaded from digital onboarding',
+        doc_MASTER_DETAILS: 'Proof of document',
+      };
+
+      // Upload API
+      await new Promise((resolve, reject) => {
+        SaveSignupDocumentAPI(body, response => {
+          const children =
+            response?.responseBody?.children?.[0]?.children || []; // <-- fix nested level
+
+          console.log('Parsed children:', children);
+
+          const getValue = key =>
+            children.find(c => c.name === key)?.value || '';
+
+          const messageCode = getValue('MessageCode');
+          const message = getValue('Message');
+          const isErrorMessage = getValue('IsErrorMessage');
+          const statusId = getValue('StatusID');
+
+          console.log('Parsed Values:', {
+            messageCode,
+            message,
+            isErrorMessage,
+            statusId,
           });
-          setIsUploadSuccessful(true);
 
-          setTimeout(() => {
-            navigation.navigate('Login'); // React Navigation
-          }, 1000);
-        } else {
-          const errorMsg = `${message} ${messageDetails}`;
-          setError(errorMsg);
-          Toast.show({ type: 'error', text1: errorMsg });
-        }
+          // Check success condition
+          if (messageCode === '2' && isErrorMessage === 'false') {
+            Toast.show({
+              type: 'success',
+              text1: message || 'Document uploaded successfully!',
+            });
+
+            setIsUploadSuccessful(true);
+
+            // Clean up Inbox file after success
+            if (inboxPathToDelete) {
+              RNFS.unlink(inboxPathToDelete)
+                .then(() =>
+                  console.log('🧹 Deleted Inbox temp file:', inboxPathToDelete),
+                )
+                .catch(err =>
+                  console.log('⚠️ Inbox cleanup failed:', err.message),
+                );
+            }
+
+            setTimeout(
+              () => navigation.navigate('Dashboard', { statusId }),
+              1000,
+            );
+
+            resolve(true);
+          } else {
+            reject(new Error(message || 'Upload failed.'));
+          }
+        });
       });
-    } catch (err: any) {
-      console.error(err);
-      const errorMsg = err?.message || 'Upload failed';
-      setError(errorMsg);
-      Toast.show({ type: 'error', text1: errorMsg });
+    } catch (err) {
+      console.log('Upload Error:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Upload failed',
+        text2: err?.message || 'Please try again',
+      });
+      setFormData(prev => ({
+        ...prev,
+        document: null,
+        documentType: '',
+      }));
     } finally {
       setLoading(false);
     }
@@ -513,32 +686,42 @@ const PersonalInformationScreen = () => {
     setProgressLabel('Proceeding to Dashboard...');
     setShowProgressBar(true);
 
-    setTimeout(() => {
-      navigation.navigate('Login'); // Navigate to Dashboard screen
-    }, 3000);
+    setTimeout(
+      () => navigation.navigate('Dashboard', { statusId: 'success' }),
+      1000,
+    );
   };
 
   const handleNext = async () => {
     try {
+      let isValid = true;
+
       switch (currentStep) {
         case 1:
-          await handlePersonalInformation();
+          isValid = await handlePersonalInformation().catch(() => false);
           break;
         case 2:
-          await handleContactInformation();
+          isValid = await handleContactInformation().catch(() => false);
           break;
         case 3:
-          await handleAddressInformation();
+          isValid = await handleAddressInformation().catch(() => false);
           break;
         case 4:
-          if (!idType) return showToast('Please select an ID type.');
+          if (!idType) {
+            showToast('Please select an ID type.');
+            isValid = false;
+          }
           break;
         case 5:
-          if (!formData.selfie)
-            console.log('[Step 5 Check] formData:', formData);
-          return showToast('Please upload selfie before proceeding.');
+          if (!formData.selfie) {
+            showToast('Please upload a selfie before proceeding.');
+            isValid = false;
+          }
           break;
       }
+
+      if (!isValid) return; // stop here if validation failed
+
       setCurrentStep(prev => prev + 1);
     } catch (err) {
       console.warn(err);
@@ -560,116 +743,144 @@ const PersonalInformationScreen = () => {
         <AppHeader showBack={true} onBackPress={handleBack} />
 
         {showProgressBar && <ProgressLoadbar label={progressLabel} />}
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            width: '100%',
-            alignItems: 'center',
-            paddingHorizontal: 20,
-            paddingBottom: 40,
-          }}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
         >
-          {/* <BackButton onPress={handleBack}>
-            <ButtonText>Back</ButtonText>
-          </BackButton> */}
-
-          <Box style={{ width: '100%', alignSelf: 'center' }}>
-            {currentStep === 1 && (
-              <>
-                <Title>Personal Information</Title>
-                <PersonalInformationForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  error={error}
-                  setError={setError}
-                  genders={genders}
-                  citizenships={citizenships}
-                />
-              </>
-            )}
-            {currentStep === 2 && (
-              <>
-                <Title>Contact Information</Title>
-                <ContactForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  email={authUser?.Email}
-                />
-              </>
-            )}
-            {currentStep === 3 && (
-              <>
-                <Title>Address Information</Title>
-                <AddressForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  error={error}
-                  setError={setError}
-                  canadaId={canadaId}
-                  setCanadaId={setCanadaId}
-                />
-              </>
-            )}
-            {currentStep === 4 && (
-              <>
-                <Title>ID Details</Title>
-                <IDTypeComponent onSelect={handleSelectIdType} />
-              </>
-            )}
-            {currentStep === 5 && (
-              <>
-                <Title>Upload Images</Title>
-                <IDDetailsComponent
-                  idType={idType}
-                  formData={formData}
-                  setFormData={setFormData}
-                  onUpload={(type, data, faceData) => {
-                    console.log(`[Parent onUpload] Received ${type}`, data);
-                    handleImageUpload(type, data, faceData); // data is { uri, base64 }
-                  }}
-                  setParentLoader={setLoading}
-                  setCurrentStep={setCurrentStep}
-                  currentStep={currentStep}
-                  authUser={authUser}
-                />
-              </>
-            )}
-
-            {currentStep === 6 && (
-              <>
-                <Title>Document Upload</Title>
-                <DocumentUploadComponent
-                  formData={formData}
-                  setFormData={setFormData}
-                  onUpload={() => {}}
-                />
-              </>
-            )}
-
-            <ButtonRow>
-              {/* Left button: Cancel / Skip */}
-              <Button onPress={currentStep === 6 ? handleSkip : handleCancel}>
-                <ButtonText>{currentStep === 6 ? 'Skip' : 'Cancel'}</ButtonText>
-              </Button>
-
-              {/* Right button: Next */}
-              {currentStep < 6 && (
-                <Button
-                  onPress={() => {
-                    if (currentStep === 6) {
-                      handleProofOfDocumentUpload();
-                    } else {
-                      handleNext();
-                    }
-                  }}
-                  disabled={currentStep === 4 && !idType} // keep your original disabled check
-                >
-                  <ButtonText>Next</ButtonText>
-                </Button>
+          {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              // alignItems: 'stretch',
+              paddingBottom: 100,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            <Box>
+              {currentStep === 1 && (
+                <>
+                  <Title>Personal Information</Title>
+                  <PersonalInformationForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    error={error}
+                    setError={setError}
+                    genders={genders}
+                    citizenships={citizenships}
+                  />
+                </>
               )}
-            </ButtonRow>
-          </Box>
-        </ScrollView>
+              {currentStep === 2 && (
+                <>
+                  <Title>Contact Information</Title>
+                  <ContactForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    email={authUser?.Email}
+                  />
+                </>
+              )}
+              {currentStep === 3 && (
+                <>
+                  <Title>Address Information</Title>
+                  <AddressForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    error={error}
+                    setError={setError}
+                    canadaId={canadaId}
+                    setCanadaId={setCanadaId}
+                  />
+                </>
+              )}
+              {currentStep === 4 && (
+                <>
+                  <Title>ID Details</Title>
+                  <IDTypeComponent onSelect={handleSelectIdType} />
+                </>
+              )}
+              {currentStep === 5 && (
+                <>
+                  <Title>Upload Images</Title>
+                  <IDDetailsComponent
+                    idType={idType}
+                    formData={formData}
+                    setFormData={setFormData}
+                    onUpload={(type, data, faceData) => {
+                      console.log(
+                        `[Parent onUpload] Received ${type}`,
+                        data,
+                        faceData,
+                      );
+                      handleImageUpload(type, data, faceData); // data is { uri, base64 }
+                    }}
+                    setParentLoader={setLoading}
+                    setCurrentStep={setCurrentStep}
+                    currentStep={currentStep}
+                    authUser={authUser}
+                  />
+                </>
+              )}
+
+              {currentStep === 6 && (
+                <>
+                  <Title>Document Upload</Title>
+                  <DocumentUploadComponent
+                    formData={formData}
+                    setFormData={setFormData}
+                    onUpload={data => {
+                      console.log('Document data received from child:', data);
+                      setFormData(prev => ({
+                        ...prev,
+                        documentType: data.documentType,
+                        documentName: data.documentName,
+                        document: data.document?.base64 || data.document,
+                        fileExtension: data.fileExtension,
+                      }));
+                    }}
+                  />
+                </>
+              )}
+              <ButtonRow>
+                {/* Hide all buttons when currentStep === 5 */}
+                {currentStep !== 5 && (
+                  <>
+                    {/* Left button: Cancel / Skip */}
+                    <Button
+                      onPress={currentStep === 6 ? handleSkip : handleCancel}
+                    >
+                      <ButtonText>
+                        {currentStep === 6 ? 'Skip' : 'Cancel'}
+                      </ButtonText>
+                    </Button>
+
+                    {/* Right button logic */}
+                    {currentStep < 5 && (
+                      <Button
+                        onPress={handleNext}
+                        disabled={currentStep === 4 && !idType}
+                      >
+                        <ButtonText>Next</ButtonText>
+                      </Button>
+                    )}
+
+                    {currentStep === 6 && (
+                      <Button
+                        onPress={() => {
+                          console.log('Before Upload:', formData);
+                          handleProofOfDocumentUpload();
+                        }}
+                      >
+                        <ButtonText>Next</ButtonText>
+                      </Button>
+                    )}
+                  </>
+                )}
+              </ButtonRow>
+            </Box>
+          </ScrollView>
+          {/* </TouchableWithoutFeedback> */}
+        </KeyboardAvoidingView>
         <Toast />
       </Container>
     </Background>

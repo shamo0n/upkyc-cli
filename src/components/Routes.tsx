@@ -79,7 +79,7 @@ export default function Routes() {
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName={initialRoute}
-        screenOptions={{ headerShown: false }}
+        screenOptions={{ headerShown: false, gestureEnabled: false }}
       >
         {/*  Auth Screens */}
         <Stack.Screen name="Login" component={Login} />

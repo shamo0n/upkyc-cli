@@ -3,32 +3,33 @@ import styled from 'styled-components/native';
 
 export const Background = styled(ImageBackground)`
   flex: 1;
-  width: 100%;
-  height: 100%;
+  align-items: center;
+  justify-content: center;
 `;
 export const Container = styled(View)`
   flex: 1;
   width: 100%;
   padding: 20px;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: stretch;
 `;
 
 export const Box = styled.View`
-  width: 0%;
-  max-width: 526px;
-  padding: 32px 24px;
+  width: 100%;
+  max-width: 600px;
+  padding: 24px 20px;
   background-color: rgba(42, 71, 56, 0.82);
   border-radius: 12px;
-  align-items: center;
-  justify-content: flex-start;
+  align-self: center;
+  margin-top: 40px;
 `;
 
 export const Title = styled.Text`
   font-size: 22px;
-  font-weight: bold;
+  font-weight: 700;
   color: #fff;
   margin-bottom: 20px;
+  text-align: center;
 `;
 
 export const ButtonRow = styled.View`
@@ -41,18 +42,17 @@ export const ButtonRow = styled.View`
 
 export const Button = styled.TouchableOpacity<{ disabled?: boolean }>`
   flex: 1;
-  max-width: 150px;
   height: 50px;
-  background-color: #355042;
+  background-color: ${({ disabled }) => (disabled ? '#4a6a59' : '#355042')};
   border-radius: 6px;
   justify-content: center;
   align-items: center;
-  opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
+  opacity: ${({ disabled }) => (disabled ? 0.7 : 1)};
 `;
 
 export const ButtonText = styled.Text`
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 600;
   color: #fff;
   text-transform: none;
 `;
@@ -63,8 +63,14 @@ export const BackButton = styled.TouchableOpacity`
   margin-bottom: 20px;
 `;
 
-export const BackIcon = styled.Image`
+export const BackIcon = styled.Image.attrs({
+  resizeMode: 'contain',
+})`
   width: 20px;
   height: 20px;
   margin-right: 8px;
+`;
+export const BackText = styled.Text`
+  font-size: 16px;
+  color: #fff;
 `;

@@ -16,7 +16,12 @@ import {
   DateText,
   PickerWrapper,
 } from './style';
-import { Platform, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 
 interface Props {
   formData: any;
@@ -134,190 +139,211 @@ const PersonalInformationForm: React.FC<Props> = ({
     const year = d.getFullYear();
     return `${day}/${month}/${year}`;
   };
+  const formattedDob = formatDate(formData.dob);
+
   return (
-    <FormContainer>
-      <InputGroup>
-        <Label>First Name</Label>
-        <StyledTextInput
-          value={formData.firstName || ''}
-          onChangeText={text => handleInputChange('firstName', text)}
-          placeholder="First Name"
-          placeholderTextColor="#ccc"
-          hasError={!!error.firstName}
-        />
-        {error.firstName && <ErrorText>{error.firstName}</ErrorText>}
-      </InputGroup>
-
-      <InputGroup>
-        <Label>Middle Name</Label>
-        <StyledTextInput
-          value={formData.middleName || ''}
-          onChangeText={text => handleInputChange('middleName', text)}
-          placeholder="Middle Name"
-          placeholderTextColor="#ccc"
-          hasError={!!error.middleName}
-        />
-        {error.middleName && <ErrorText>{error.middleName}</ErrorText>}
-      </InputGroup>
-
-      <InputGroup>
-        <Label>Last Name</Label>
-        <StyledTextInput
-          value={formData.lastName || ''}
-          onChangeText={text => handleInputChange('lastName', text)}
-          placeholder="Last Name"
-          placeholderTextColor="#ccc"
-          hasError={!!error.lastName}
-        />
-        {error.lastName && <ErrorText>{error.lastName}</ErrorText>}
-      </InputGroup>
-
-      {/* ✅ GENDER PICKER */}
-      <InputGroup>
-        <Label>Select Gender</Label>
-        <PickerWrapper>
-          <DropDownPicker
-            open={genderOpen}
-            value={genderValue}
-            items={genderItems}
-            setOpen={setGenderOpen}
-            setValue={setGenderValue}
-            setItems={setGenderItems}
-            onOpen={onGenderOpen}
-            searchable={true}
-            disableBorderRadius={true}
-            searchPlaceholder="Search Gender..."
-            placeholder="Select Gender"
-            onChangeValue={value => handleInputChange('gender', value)}
-            style={{
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            }}
-            dropDownContainerStyle={{
-              backgroundColor: '#fff',
-              borderWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-              borderColor: '#fff',
-              zIndex: 6000,
-              ...(Platform.OS === 'android' && { marginTop: 4 }),
-            }}
-            arrowIconStyle={{
-              tintColor: '#fff', // your color
-            }}
-            textStyle={{
-              color: '#fff',
-              fontSize: 16,
-            }}
-            searchTextInputStyle={{
-              color: '#fff',
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-            }}
-            placeholderStyle={{
-              color: '#fff',
-            }}
-            listItemLabelStyle={{
-              color: '#355042',
-            }}
-            listItemContainerStyle={{
-              backgroundColor: 'transparent',
-            }}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <FormContainer>
+        <InputGroup>
+          <Label>First Name</Label>
+          <StyledTextInput
+            value={formData.firstName || ''}
+            onChangeText={text => handleInputChange('firstName', text)}
+            placeholder="First Name"
+            placeholderTextColor="#ccc"
+            hasError={!!error.firstName}
           />
-        </PickerWrapper>
-        {error.gender && <ErrorText>{error.gender}</ErrorText>}
-      </InputGroup>
+          {error.firstName && <ErrorText>{error.firstName}</ErrorText>}
+        </InputGroup>
 
-      {/* ✅ DATE PICKER */}
-      <InputGroup>
-        <Label>Date of Birth</Label>
-        <DatePickerButton onPress={() => setShowDatePicker(true)}>
-          <DateText>
-            {formatDate(formData.dob)
-              ? formatDate(formData.dob)
-              : 'Select Date of Birth'}
-          </DateText>
-        </DatePickerButton>
-        {error.dob && <ErrorText>{error.dob}</ErrorText>}
-
-        <DateTimePickerModal
-          isVisible={showDatePicker}
-          mode="date"
-          date={formData.dob ? new Date(formData.dob) : defaultDob}
-          onConfirm={date => {
-            handleInputChange('dob', date.toISOString().split('T')[0]);
-            setShowDatePicker(false);
-          }}
-          onCancel={() => setShowDatePicker(false)}
-          maximumDate={
-            new Date(
-              today.getFullYear() - 18,
-              today.getMonth(),
-              today.getDate(),
-            )
-          }
-        />
-      </InputGroup>
-
-      {/* ✅ CITIZENSHIP PICKER */}
-      <InputGroup>
-        <Label>Select Citizenship</Label>
-        <PickerWrapper>
-          <DropDownPicker
-            open={citizenshipOpen}
-            value={citizenshipValue}
-            items={citizenshipItems}
-            setOpen={setCitizenshipOpen}
-            setValue={setCitizenshipValue}
-            setItems={setCitizenshipItems}
-            onOpen={onCitizenshipOpen}
-            searchable={true}
-            searchPlaceholder="Search Citizenship..."
-            placeholder="Select Citizenship"
-            onChangeValue={value => handleInputChange('citizenship', value)}
-            style={{
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            }}
-            dropDownContainerStyle={{
-              backgroundColor: '#fff',
-              borderWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-              borderColor: '#fff',
-              zIndex: 6000,
-              ...(Platform.OS === 'android' && { marginTop: 4 }),
-            }}
-            arrowIconStyle={{
-              tintColor: '#fff', // your color
-            }}
-            textStyle={{
-              color: '#fff',
-              fontSize: 16,
-            }}
-            searchTextInputStyle={{
-              color: '#fff',
-              backgroundColor: 'transparent',
-              borderWidth: 0,
-            }}
-            placeholderStyle={{
-              color: '#fff',
-            }}
-            listItemLabelStyle={{
-              color: '#355042',
-            }}
-            listItemContainerStyle={{
-              backgroundColor: 'transparent',
-            }}
+        <InputGroup>
+          <Label>Middle Name</Label>
+          <StyledTextInput
+            value={formData.middleName || ''}
+            onChangeText={text => handleInputChange('middleName', text)}
+            placeholder="Middle Name"
+            placeholderTextColor="#ccc"
+            hasError={!!error.middleName}
           />
-        </PickerWrapper>
-        {error.citizenship && <ErrorText>{error.citizenship}</ErrorText>}
-      </InputGroup>
-    </FormContainer>
+          {error.middleName && <ErrorText>{error.middleName}</ErrorText>}
+        </InputGroup>
+
+        <InputGroup>
+          <Label>Last Name</Label>
+          <StyledTextInput
+            value={formData.lastName || ''}
+            onChangeText={text => handleInputChange('lastName', text)}
+            placeholder="Last Name"
+            placeholderTextColor="#ccc"
+            hasError={!!error.lastName}
+          />
+          {error.lastName && <ErrorText>{error.lastName}</ErrorText>}
+        </InputGroup>
+
+        {/* ✅ GENDER PICKER */}
+        <InputGroup>
+          <Label>Select Gender</Label>
+          <PickerWrapper zIndexValue={3000} hasBorder={true}>
+            <DropDownPicker
+              open={genderOpen}
+              value={genderValue}
+              items={genderItems}
+              setOpen={setGenderOpen}
+              setValue={setGenderValue}
+              setItems={setGenderItems}
+              onOpen={onGenderOpen}
+              searchable={true}
+              dropDownDirection="TOP"
+              disableBorderRadius={true}
+              searchPlaceholder="Search Gender..."
+              placeholder="Select Gender"
+              onChangeValue={value => handleInputChange('gender', value || '')}
+              style={{
+                backgroundColor: 'transparent',
+                borderWidth: 0,
+                elevation: 0,
+                shadowOpacity: 0,
+                zIndex: 5000,
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: '#fff',
+                borderWidth: 0,
+                elevation: 0,
+                shadowOpacity: 0,
+                borderColor: '#fff',
+                zIndex: 6000,
+                ...(Platform.OS === 'android' && { marginTop: 4 }),
+              }}
+              arrowIconStyle={{
+                tintColor: '#fff',
+              }}
+              textStyle={{
+                color: '#fff',
+                fontSize: 16,
+              }}
+              searchTextInputStyle={{
+                color: '#355042',
+                backgroundColor: 'transparent',
+                borderWidth: 0,
+              }}
+              placeholderStyle={{
+                color: '#fff',
+              }}
+              listItemLabelStyle={{
+                color: '#355042',
+              }}
+              listItemContainerStyle={{
+                backgroundColor: 'transparent',
+              }}
+              listMessageContainerStyle={{
+                backgroundColor: 'transparent', // or any background you prefer
+              }}
+              listMessageTextStyle={{
+                color: '#4F6659', // custom text color
+                fontSize: 14,
+                fontWeight: '600',
+              }}
+              zIndex={9999}
+            />
+          </PickerWrapper>
+          {error.gender && <ErrorText>{error.gender}</ErrorText>}
+        </InputGroup>
+
+        {/* ✅ DATE PICKER */}
+        <InputGroup>
+          <Label>Date of Birth</Label>
+          <DatePickerButton onPress={() => setShowDatePicker(true)}>
+            <DateText>{formattedDob || 'Select Date of Birth'}</DateText>
+          </DatePickerButton>
+          {error.dob && <ErrorText>{error.dob}</ErrorText>}
+
+          <DateTimePickerModal
+            isVisible={showDatePicker}
+            mode="date"
+            date={formData.dob ? new Date(formData.dob) : defaultDob}
+            onConfirm={date => {
+              handleInputChange('dob', date.toISOString().split('T')[0]);
+              setShowDatePicker(false);
+            }}
+            onCancel={() => setShowDatePicker(false)}
+            maximumDate={
+              new Date(
+                today.getFullYear() - 18,
+                today.getMonth(),
+                today.getDate(),
+              )
+            }
+          />
+        </InputGroup>
+
+        {/* ✅ CITIZENSHIP PICKER */}
+        <InputGroup>
+          <Label>Select Citizenship</Label>
+          <PickerWrapper zIndexValue={3000} hasBorder={true}>
+            <DropDownPicker
+              open={citizenshipOpen}
+              value={citizenshipValue}
+              items={citizenshipItems}
+              setOpen={setCitizenshipOpen}
+              setValue={setCitizenshipValue}
+              setItems={setCitizenshipItems}
+              onOpen={onCitizenshipOpen}
+              searchable={true}
+              dropDownDirection="TOP"
+              searchPlaceholder="Search Citizenship..."
+              placeholder="Select Citizenship"
+              onChangeValue={value => handleInputChange('citizenship', value)}
+              style={{
+                backgroundColor: 'transparent',
+                borderWidth: 0,
+                elevation: 0,
+                shadowOpacity: 0,
+              }}
+              dropDownContainerStyle={{
+                backgroundColor: '#fff',
+                borderWidth: 0,
+                elevation: 0,
+                shadowOpacity: 0,
+                borderColor: '#fff',
+                zIndex: 6000,
+                ...(Platform.OS === 'android' && { marginTop: 4 }),
+              }}
+              arrowIconStyle={{
+                tintColor: '#fff', // your color
+              }}
+              textStyle={{
+                color: '#fff',
+                fontSize: 16,
+              }}
+              searchTextInputStyle={{
+                color: '#355042',
+                backgroundColor: 'transparent',
+                borderWidth: 0,
+              }}
+              placeholderStyle={{
+                color: '#fff',
+              }}
+              listItemLabelStyle={{
+                color: '#355042',
+              }}
+              listItemContainerStyle={{
+                backgroundColor: 'transparent',
+              }}
+              listMessageContainerStyle={{
+                backgroundColor: 'transparent', // or any background you prefer
+              }}
+              listMessageTextStyle={{
+                color: '#4F6659', // custom text color
+                fontSize: 14,
+                fontWeight: '600',
+              }}
+              zIndex={9999}
+            />
+          </PickerWrapper>
+          {error.citizenship && <ErrorText>{error.citizenship}</ErrorText>}
+        </InputGroup>
+      </FormContainer>
+    </TouchableWithoutFeedback>
   );
 };
 

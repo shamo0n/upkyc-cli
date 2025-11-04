@@ -1,6 +1,7 @@
 // style.tsx
 import { Platform } from 'react-native';
 import styled from 'styled-components/native';
+import { responsiveFontSize } from '../../Utils/responsive';
 
 export const Container = styled.ImageBackground`
   flex: 1;
@@ -77,25 +78,28 @@ export const Grid = styled.View`
   width: 100%;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 12px;
 `;
 
 export const Card = styled.TouchableOpacity`
-  border-radius: 12px;
-  padding-vertical: 30px;
-  padding-horizontal: 20px;
-  border: 1px solid rgba(254, 254, 254, 0.3); /* #fefefe4d */
-  width: 48%;
+  flex-basis: 45%;
+  min-width: 150px;
+  max-width: 220px;
   align-items: center;
+  border-radius: 12px;
+  padding-vertical: 24px;
+  padding-horizontal: 16px;
+  border: 1px solid rgba(254, 254, 254, 0.3);
+  background-color: rgba(255, 255, 255, 0.05);
   margin-bottom: 12px;
 `;
 
 export const CardText = styled.Text`
   color: #fff;
-  font-size: 16px;
+  font-size: ${responsiveFontSize(12)}px;
   font-weight: 600;
 `;
-
 export const Centered = styled.View`
   position: absolute;
   top: 0;

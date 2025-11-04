@@ -113,6 +113,7 @@ export const QRSection = styled.View`
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  margin: 10px;
 `;
 
 export const QRTitle = styled.Text`

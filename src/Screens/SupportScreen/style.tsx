@@ -1,58 +1,49 @@
 import styled from 'styled-components/native';
-import { Dimensions, Image } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export const PageContainer = styled.View`
-  flex: 1;
-  padding: 100px;
+// Dynamic scaling helpers
+const horizontalPadding = width < 380 ? 16 : 24;
+const verticalPadding = height < 700 ? 16 : 24;
 
-`;
 export const BgImg = styled.ImageBackground`
   flex: 1;
-  padding: 20px;
-`;
-export const HeaderBar = styled.View`
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 16px;
+  padding: ${verticalPadding}px ${horizontalPadding}px;
 `;
 
-export const BackButton = styled.TouchableOpacity`
-  flex-direction: row;
+export const PageContainer = styled.View`
+  flex: 1;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-`;
-
-export const BackText = styled.Text`
-  color: #fff;
-  font-size: 16px;
 `;
 
 export const SupportBox = styled.View`
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.12);
   border-radius: 18px;
-  padding: 20px;
-  height: 60%;
-  width: 100%;
-  max-width: 380px;
+  padding: ${height < 700 ? 16 : 24}px;
+  width: 90%;
+  max-width: 400px;
   align-self: center;
-  backdrop-filter: blur(10px);
+  justify-content: center;
+  shadow-color: #000;
+  shadow-opacity: 0.3;
+  shadow-radius: 6px;
 `;
 
 export const LogoContainer = styled.Image`
-  width: 100%;
-  height: 70px;
+  width: 80%;
+  height: ${height < 700 ? 60 : 80}px;
   align-self: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 `;
 
 export const Heading = styled.Text`
-  font-size: 20px;
+  font-size: ${width < 380 ? 18 : 20}px;
   font-weight: 600;
   color: #fff;
   text-align: center;
-  margin: 20px;
+  margin-bottom: 20px;
 `;
 
 export const InfoCard = styled.TouchableOpacity`
@@ -60,14 +51,14 @@ export const InfoCard = styled.TouchableOpacity`
   align-items: center;
   background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 16px 20px;
+  padding: ${height < 700 ? 12 : 16}px 18px;
   border-radius: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   gap: 12px;
 `;
 
 export const InfoText = styled.Text`
   color: #fff;
-  font-size: 16px;
+  font-size: ${width < 380 ? 14 : 16}px;
   flex: 1;
 `;

@@ -14,7 +14,7 @@ const { width } = Dimensions.get('window');
 
 const getResponsiveWidth = (): number => {
   if (width < 360) return width * 0.95;
-  if (width < 480) return width * 0.9;
+  if (width < 360) return width * 0.9;
   if (width < 768) return width * 0.85;
   if (width < 1024) return width * 0.7;
   return width * 0.55;
@@ -32,6 +32,11 @@ interface ButtonProps {
 }
 
 // ---------- Styled Components ----------
+export const FormContainer = styled.View`
+  width: 100%;
+  min-width: 350px;
+  align-self: center;
+`;
 export const Container = styled(View)`
   flex: 1;
   background-color: rgba(0, 0, 0, 0.7);
@@ -40,21 +45,24 @@ export const Container = styled(View)`
   padding: 10px;
 `;
 
-export const InputGroup = styled(View)`
+export const InputGroup = styled.View`
   width: ${getResponsiveWidth()}px;
   margin-bottom: 16px;
   align-self: center;
 `;
-
-export const PickerWrapper = styled(View)`
+export const PickerWrapper = styled(View)<{
+  hasBorder?: boolean;
+  zIndexValue?: number;
+}>`
   width: ${getResponsiveWidth()}px;
   height: ${INPUT_HEIGHT}px;
-  border-width: 1px;
+  border-width: ${({ hasBorder }) => (hasBorder ? 1 : 0)}px;
   border-color: #ffffff4d;
   border-radius: 3px;
   justify-content: center;
   padding-horizontal: 12px;
   align-self: center;
+  z-index: ${({ zIndexValue }) => zIndexValue || 1};
 `;
 
 export const Label = styled(Text)`
@@ -63,21 +71,22 @@ export const Label = styled(Text)`
   margin-bottom: 6px;
 `;
 export const PSStyledTextInput = styled(TextInput)<InputProps>`
-  width: 100%;
-  min-width: 450px;
-  padding: 12px;
-  border-radius: 3px;
-  color: #fff;
-  border-color: ${(props) => (props.hasError ? '#ff4d4d' : '#ffffff4d')};
-`;
-export const StyledTextInput = styled(TextInput)<InputProps>`
-  width: 100%;
-  min-width: 450px;
+  width: ${getResponsiveWidth()}px;
   padding: 12px;
   border-radius: 3px;
   color: #fff;
   border-width: 1px;
-  border-color: ${(props) => (props.hasError ? '#ff4d4d' : '#ffffff4d')};
+  border-color: ${props => (props.hasError ? '#ff4d4d' : '#ffffff4d')};
+  align-self: center;
+`;
+export const StyledTextInput = styled(TextInput)<InputProps>`
+  width: ${getResponsiveWidth()}px;
+  padding: 12px;
+  border-radius: 3px;
+  color: #fff;
+  border-width: 1px;
+  border-color: ${props => (props.hasError ? '#ff4d4d' : '#ffffff4d')};
+  align-self: center;
 `;
 
 export const ErrorText = styled(Text)`
@@ -87,7 +96,7 @@ export const ErrorText = styled(Text)`
 `;
 
 export const ButtonStyled = styled(TouchableOpacity)<ButtonProps>`
-  background-color: ${(props) => props.color || '#355042'};
+  background-color: ${props => props.color || '#355042'};
   padding: 12px;
   border-radius: 3px;
   margin-bottom: 16px;

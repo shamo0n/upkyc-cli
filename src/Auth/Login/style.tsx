@@ -29,6 +29,7 @@ export const Background = styled(ImageBackground)`
   flex: 1;
   width: 100%;
   height: 100%;
+  background-color: rgba(42, 71, 56, 0.82);
 `;
 
 // ScrollView with content styles

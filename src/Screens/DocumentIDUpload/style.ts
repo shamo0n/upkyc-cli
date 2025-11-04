@@ -2,26 +2,26 @@ import styled from 'styled-components/native';
 import { ScrollView, View, Text, TouchableOpacity, Image, ImageBackground } from 'react-native';
 export const Background = styled(ImageBackground)`
   flex: 1;
-  width: 100%;
-  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 `;
 
 export const Container = styled(View)`
   flex: 1;
   width: 100%;
-  padding: 20px;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: stretch;
 `;
 
 export const Box = styled.View`
-  width: 0%;
-  max-width: 526px;
-  padding: 32px 24px;
+  width: 100%;
+  max-width: 600px;
+  padding: 24px 20px;
   background-color: rgba(42, 71, 56, 0.82);
   border-radius: 12px;
-  align-items: center;
-  justify-content: flex-start;
+  align-self: center;
+  margin-top: 40px;
 `;
 // Inner form container
 export const FormContainer = styled(View)`
