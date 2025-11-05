@@ -44,6 +44,8 @@ import {
   IDImagesContainer,
   ImageBlock,
   DownloadButton,
+  ValueText,
+  ProfileItemContent,
 } from './style';
 
 import ProfileHeader from '../../components/ProfileHeader';
@@ -381,9 +383,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <ImageBox>
                 <ArrowrighttIcon width={12} height={12} />
               </ImageBox>
-              <ProfileItemText>
-                <BoldText>{item.label}: </BoldText> {item.value || '-'}
-              </ProfileItemText>
+              <ProfileItemContent>
+                {/* <BoldText>{item.label}: </BoldText> {item.value || '-'} */}
+                <BoldText>{item.label}: </BoldText>
+                <ValueText numberOfLines={0} ellipsizeMode="tail">
+                  {item.value || '-'}
+                </ValueText>
+              </ProfileItemContent>
             </ProfileItem>
           ))}
         </InfoList>

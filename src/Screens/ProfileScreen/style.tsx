@@ -15,20 +15,26 @@ export const ProfileBox = styled.View`
 `;
 
 export const InfoList = styled.View`
-  margin-top: 20px;
-  width: 100%;
+  width: 90%;
+  align-self: center;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 14px;
+  gap: 8px;
 `;
 
 export const ProfileItem = styled.View`
+  width: 80%;
   flex-direction: row;
-  align-items: center;
-  padding-vertical: 10px;
+  align-items: flex-start;
+  justify-content: center;
 `;
 
 export const ImageBox = styled.View`
   align-items: center;
   justify-content: center;
   background-color: #677b70;
+  margin-top: 4px;
   margin-right: 10px;
   border-radius: 4px;
   width: 18px;
@@ -40,15 +46,26 @@ export const ArrowIcon = styled.Image`
   height: 20px;
 `;
 
-export const ProfileItemText = styled.Text`
-  color: #fff;
-  font-size: 14px;
+export const ProfileItemContent = styled.View`
+  flex: 1;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  flex-shrink: 1;
 `;
 
 export const BoldText = styled.Text`
-  font-weight: bold;
+  font-weight: 600;
+  color: #fff;
 `;
 
+export const ValueText = styled.Text`
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  color: #fff;
+  font-size: 14px;
+  line-height: 20px;
+`;
 export const InfoText = styled.Text`
   color: #fff;
   font-size: 14px;
@@ -105,6 +122,7 @@ export const QRContainer = styled.View`
   align-items: center;
   width: 350px;
   justify-content: center;
+  margin-top: 20px;
 `;
 
 // QR Section

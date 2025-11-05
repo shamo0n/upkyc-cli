@@ -40,15 +40,16 @@ export const ButtonText = styled.Text`
 
 export const ButtonRow = styled.View`
   flex-direction: row;
-  justify-content: space-around;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 20px;
 `;
 
 export const BackButton = styled.TouchableOpacity`
-  height: 50px;
-  width: 100%;
+  flex: 1;
+  min-width: 120px;
   max-width: 150px;
-  padding-vertical: 14px;
+  height: 50px;
   border-radius: 5px;
   border-width: 1px;
   border-color: rgba(254, 254, 254, 0.27);

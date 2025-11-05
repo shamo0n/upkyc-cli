@@ -194,7 +194,6 @@ const KycProcessScreen: React.FC = () => {
           </ScrollView>
           {!customerProfile?.isKYC_Eval && (
             <ButtonRow>
-              r
               <BackButton
                 onPress={() =>
                   navigation.navigate('Dashboard', { statusId: undefined })

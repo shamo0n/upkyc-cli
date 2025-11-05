@@ -13,7 +13,16 @@ target 'Upkyc' do
     :path => config[:reactNativePath],
     :hermes_enabled => true
   )
-
+  # --- Fix for nanopb non-modular include error ---
+  pre_install do |installer|
+    installer.pod_targets.each do |pod|
+      if pod.name == 'nanopb'
+        def pod.build_type
+          Pod::BuildType.static_library
+        end
+      end
+    end
+  end
   post_install do |installer|
     react_native_post_install(
       installer,

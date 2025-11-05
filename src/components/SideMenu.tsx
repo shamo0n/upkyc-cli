@@ -77,7 +77,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
           <Text style={styles.menuItem}>Support</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onLogoutClick}>
-          <Text style={[styles.menuItem, { color: '#FFB3B3' }]}>Logout</Text>
+          <Text style={[styles.menuItem, { color: 'red' }]}>Logout</Text>
         </TouchableOpacity>
       </View>
     </View>
