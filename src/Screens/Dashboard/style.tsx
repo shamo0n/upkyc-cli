@@ -78,21 +78,20 @@ export const Grid = styled.View`
   width: 100%;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
+  justify-content: space-between;
+  row-gap: 16px;
+  column-gap: 8px;
 `;
 
 export const Card = styled.TouchableOpacity`
-  flex-basis: 45%;
-  min-width: 150px;
-  max-width: 220px;
+  width: 48%;
   align-items: center;
   border-radius: 12px;
-  padding-vertical: 24px;
-  padding-horizontal: 16px;
+  padding-vertical: 20px;
+  padding-horizontal: 10px;
   border: 1px solid rgba(254, 254, 254, 0.3);
-  background-color: rgba(255, 255, 255, 0.05);
-  margin-bottom: 12px;
+  background-color: rgba(255, 255, 255, 0.08);
+  margin-bottom: 8px;
 `;
 
 export const CardText = styled.Text`

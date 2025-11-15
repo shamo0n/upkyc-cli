@@ -1,4 +1,7 @@
+import { Dimensions } from 'react-native';
 import styled from 'styled-components/native';
+const { width } = Dimensions.get('window');
+const isSmallScreen = width < 360;
 
 // Container for step
 export const StepContainer = styled.View`
@@ -18,11 +21,10 @@ export const Title = styled.Text`
 // Row of buttons
 export const ButtonRow = styled.View`
   flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 10px;
-  gap: 12px;
+  gap: ${isSmallScreen ? '5px' : '3px'};
 `;
 
 // Individual ID button
@@ -31,10 +33,10 @@ export const IdButton = styled.TouchableOpacity`
   align-items: center;
   flex-direction: column;
   padding: 16px;
-  width: 30%;
   min-width: 100px;
-  max-width: 160px;
-  height: 120px;
+  max-width: 150px;
+  height: 110px;
+  margin-right: 2px;
   border-radius: 8px;
   border-width: 2px;
   border-color: ${props => (props.selected ? '#4F6659' : '#FEFEFE4D')};

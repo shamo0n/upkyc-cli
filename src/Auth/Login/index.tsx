@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { TouchableOpacity, Platform, KeyboardAvoidingView } from 'react-native';
+import {
+  TouchableOpacity,
+  Platform,
+  KeyboardAvoidingView,
+  Keyboard,
+} from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { AuthContext } from '../../Contexts/AuthContext';
@@ -65,6 +70,7 @@ const Login: React.FC = () => {
   }, []);
 
   const handleSignup = () => {
+    Keyboard.dismiss();
     console.log('Signup started with email:', email);
     setErrorMessage('');
 

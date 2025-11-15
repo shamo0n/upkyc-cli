@@ -124,8 +124,8 @@ const DocumentIDUpload: React.FC = () => {
       if (
         !(
           livenessResult === 'success' &&
-          livenessScore > 0.8 &&
-          matchScore > 0.5 &&
+          livenessScore >= 0.8 &&
+          matchScore >= 0.8 &&
           similar
         )
       ) {

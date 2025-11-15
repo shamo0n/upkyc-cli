@@ -73,6 +73,7 @@ const OtpScreen: React.FC = () => {
   };
 
   const handleOtpSubmit = () => {
+    Keyboard.dismiss();
     console.log('--- handleOtpSubmit START ---');
     setErrorMessage('');
     setLoading(true);
@@ -325,6 +326,7 @@ const OtpScreen: React.FC = () => {
                   maxLength={1}
                   placeholder=""
                   placeholderTextColor="#fff"
+                  scrollEnabled={false}
                   textAlign="center"
                   style={{
                     color: '#fff',
@@ -333,7 +335,8 @@ const OtpScreen: React.FC = () => {
                     borderColor: '#fff',
                     marginHorizontal: 5,
                     width: 50,
-                    height: 50,
+                    height: 55,
+                    textAlignVertical: 'center',
                   }}
                 />
               ))}

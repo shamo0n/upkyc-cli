@@ -304,7 +304,8 @@ const PersonalInformationScreen = () => {
     const provinceOrState = safeTrim(formData.provinceOrState);
     const postalCode = safeTrim(formData.postalCode);
     const countryId = formData.countryId;
-
+    console.log('formData.provinceOrState', formData.provinceOrState);
+    console.log('@2----provinceOrState', provinceOrState);
     if (!streetAddress) newError.streetAddress = 'Street address is required';
     if (!city) newError.city = 'City is required';
     if (!countryId) newError.countryId = 'Country is required';
@@ -499,7 +500,6 @@ const PersonalInformationScreen = () => {
       setLoading(false);
     }
   };
-
   const handleProofOfDocumentUpload = async () => {
     try {
       setLoading(true);
@@ -510,11 +510,11 @@ const PersonalInformationScreen = () => {
       const document = formData?.document;
       if (!document?.uri) throw new Error('Please select a document.');
 
-      let fileUri = document.uri;
+      let fileUri = document.fileCopyUri || document.uri; // fallback logic
       let inboxPathToDelete = null;
       console.log('Selected document URI:', fileUri);
 
-      // Handle iOS Inbox copy logic
+      // ============ iOS "Inbox" file handling ============
       if (Platform.OS === 'ios' && fileUri.includes('Inbox')) {
         try {
           const inboxPath = decodeURIComponent(fileUri.replace('file://', ''));
@@ -529,7 +529,6 @@ const PersonalInformationScreen = () => {
             let fileName = `${baseName}${fileExt}`;
             let destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
 
-            // Handle duplicate filenames
             let counter = 1;
             while (await RNFS.exists(destPath)) {
               fileName = `${baseName}_${counter}${fileExt}`;
@@ -538,7 +537,7 @@ const PersonalInformationScreen = () => {
             }
 
             await RNFS.copyFile(inboxPath, destPath);
-            console.log('✅ File copied to:', destPath);
+            console.log('✅ iOS file copied to:', destPath);
 
             inboxPathToDelete = inboxPath;
             fileUri = destPath;
@@ -550,16 +549,61 @@ const PersonalInformationScreen = () => {
         }
       }
 
-      // Verify the file exists
-      const normalizedPath = fileUri.replace('file://', '');
+      // ============ Android "content://" handling (NO blob-util) ============
+      if (Platform.OS === 'android' && fileUri.startsWith('content://')) {
+        try {
+          console.log(
+            '📄 Copying Android content:// file to cache directory...',
+          );
+
+          const fileName = document.name || `document_${Date.now()}.tmp`;
+          const destPath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+
+          // Try to resolve using RNFS.stat
+          const stat = await RNFS.stat(fileUri).catch(() => null);
+
+          if (stat && stat.path && stat.isFile()) {
+            console.log('✅ Using resolved path:', stat.path);
+            await RNFS.copyFile(stat.path, destPath);
+            fileUri = destPath;
+          } else {
+            console.log('⚠️ RNFS.stat failed, using base64 fallback...');
+            // Fallback: read as base64 then write to cache
+            const base64Data = await RNFS.readFile(fileUri, 'base64').catch(
+              err => {
+                console.log('⚠️ base64 read failed:', err.message);
+                throw new Error('Could not read the selected file.');
+              },
+            );
+
+            await RNFS.writeFile(destPath, base64Data, 'base64');
+            console.log('✅ Wrote file manually to:', destPath);
+            fileUri = destPath;
+          }
+
+          console.log('✅ Final Android local file path:', fileUri);
+        } catch (e) {
+          console.log('⚠️ Android URI copy error:', e.message);
+          throw new Error('Cannot access selected document. Please try again.');
+        }
+      }
+
+      // ============ Verify file exists ============
+      const normalizedPath = fileUri.startsWith('file://')
+        ? fileUri.replace('file://', '')
+        : fileUri;
+
+      console.log('Checking file existence at:', normalizedPath);
       const fileExists = await RNFS.exists(normalizedPath);
+      console.log('File exists?', fileExists);
+
       if (!fileExists)
         throw new Error('The selected document could not be found on disk.');
 
-      // Convert to Base64
+      // ============ Convert to Base64 ============
       const base64Data = await RNFS.readFile(normalizedPath, 'base64');
 
-      // Prepare body
+      // ============ Prepare request body ============
       const body = {
         IDTypeID: 100,
         CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
@@ -574,13 +618,11 @@ const PersonalInformationScreen = () => {
         doc_MASTER_DETAILS: 'Proof of document',
       };
 
-      // Upload API
+      // ============ API upload ============
       await new Promise((resolve, reject) => {
         SaveSignupDocumentAPI(body, response => {
           const children =
-            response?.responseBody?.children?.[0]?.children || []; // <-- fix nested level
-
-          console.log('Parsed children:', children);
+            response?.responseBody?.children?.[0]?.children || [];
 
           const getValue = key =>
             children.find(c => c.name === key)?.value || '';
@@ -597,7 +639,6 @@ const PersonalInformationScreen = () => {
             statusId,
           });
 
-          // Check success condition
           if (messageCode === '2' && isErrorMessage === 'false') {
             Toast.show({
               type: 'success',
@@ -606,7 +647,6 @@ const PersonalInformationScreen = () => {
 
             setIsUploadSuccessful(true);
 
-            // Clean up Inbox file after success
             if (inboxPathToDelete) {
               RNFS.unlink(inboxPathToDelete)
                 .then(() =>
@@ -740,7 +780,7 @@ const PersonalInformationScreen = () => {
       {loading && <LoadingSpinner />}
 
       <Container>
-        <AppHeader showBack={true} onBackPress={handleBack} />
+        <AppHeader showBack={currentStep !== 6} onBackPress={handleBack} />
 
         {showProgressBar && <ProgressLoadbar label={progressLabel} />}
         <KeyboardAvoidingView
