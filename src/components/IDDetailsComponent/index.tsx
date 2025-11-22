@@ -445,6 +445,11 @@ const IDDetailsComponent = ({
       });
     }
   };
+  const isPassport = Number(idType) === 5;
+  const canTakeBack = !isPassport && !!idImages.idFront;
+  const canTakeSelfie = isPassport
+    ? !!idImages.idFront // passport only needs front
+    : !!idImages.idFront && !!idImages.idBack; // other IDs need back
 
   // ========== UI ==========
   return (
@@ -464,9 +469,15 @@ const IDDetailsComponent = ({
       {idImages.idFront && <ImagePreview source={{ uri: idImages.idFront }} />}
 
       {/* ID Back (hide when idType = 5) */}
-      {Number(idType) !== 5 ? (
+      {!isPassport && (
         <>
-          <Button onPress={() => navigateToCamera('IDBackCamera', 'idBack')}>
+          <Button
+            style={{ opacity: canTakeBack ? 1 : 0.4 }}
+            disabled={!canTakeBack}
+            onPress={() =>
+              canTakeBack && navigateToCamera('IDBackCamera', 'idBack')
+            }
+          >
             <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
             <ButtonText>Take ID Back</ButtonText>
             {idImages.idBack && (
@@ -479,10 +490,16 @@ const IDDetailsComponent = ({
             <ImagePreview source={{ uri: idImages.idBack }} />
           )}
         </>
-      ) : null}
+      )}
 
       {/* Selfie */}
-      <Button onPress={() => navigateToCamera('SelfieCamera', 'selfie')}>
+      <Button
+        style={{ opacity: canTakeSelfie ? 1 : 0.4 }}
+        disabled={!canTakeSelfie}
+        onPress={() =>
+          canTakeSelfie && navigateToCamera('SelfieCamera', 'selfie')
+        }
+      >
         <IdUploadIcon style={{ marginRight: 10 }} width={20} height={20} />
         <ButtonText>Take Selfie</ButtonText>
         {idImages.selfie && (

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import AppHeader from './AppHeader';
 
 const { width } = Dimensions.get('window');
 const FRAME_WIDTH = width * 0.85;
@@ -50,8 +51,12 @@ export default function IDBackCameraScreen() {
 
   return (
     <View style={styles.container}>
+       <View style={styles.headerOverlay}>
+    <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
+  </View>
       {!capturedPhoto ? (
         <>
+
           {/* Camera wrapped in frame container */}
           <View style={styles.frameContainer}>
             <Camera
@@ -135,6 +140,13 @@ const styles = StyleSheet.create({
     height: '100%',
     overflow: 'hidden',
   },
+  headerOverlay: {
+  position: 'absolute',
+  top: 20,
+  left: 20,
+  width: '100%',
+  zIndex: 999,
+},
   idFrame: {
     position: 'absolute',
     width: '100%',

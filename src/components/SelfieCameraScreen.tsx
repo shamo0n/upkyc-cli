@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Camera, useCameraDevices } from 'react-native-vision-camera';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import AppHeader from './AppHeader';
 
 const { width } = Dimensions.get('window');
 const FRAME_WIDTH = width * 0.75;
@@ -26,6 +27,7 @@ export default function SelfieCameraScreen() {
   const [capturedPhoto, setCapturedPhoto] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStep, setVerificationStep] = useState<string | null>(null); // 🆕 Added
+  const [showButtons, setShowButtons] = useState(true);
 
   // 🔆 Animated glow
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -91,19 +93,20 @@ export default function SelfieCameraScreen() {
           setVerificationStep('Verification failed ❌');
           setTimeout(() => {
             navigation.goBack(); // go back even on failure
-          }, 1500);
+          }, 100);
         } else {
           setVerificationStep('Verified successfully ✅');
+          setShowButtons(false);
           setTimeout(() => {
             navigation.goBack(); // go back on success
-          }, 1000);
+          }, 100);
         }
       } catch (err) {
         console.log('[SelfieCameraScreen] Callback error:', err);
         setVerificationStep('Something went wrong ❌');
         setTimeout(() => {
           navigation.goBack(); // go back even on error
-        }, 1500);
+        }, 100);
       } finally {
         setIsVerifying(false);
       }
@@ -123,6 +126,9 @@ export default function SelfieCameraScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerOverlay}>
+        <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
+      </View>
       {!capturedPhoto ? (
         <>
           <View style={styles.frameContainer}>
@@ -171,22 +177,25 @@ export default function SelfieCameraScreen() {
               )}
             </View>
           ) : (
-            <View style={styles.buttonRow}>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={retakePhoto}
-                disabled={isVerifying}
-              >
-                <Text style={styles.buttonText}>Retake</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={savePhoto}
-                disabled={isVerifying}
-              >
-                <Text style={styles.buttonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
+            showButtons && (
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={retakePhoto}
+                  disabled={isVerifying}
+                >
+                  <Text style={styles.buttonText}>Retake</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={savePhoto}
+                  disabled={isVerifying}
+                >
+                  <Text style={styles.buttonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            )
           )}
         </>
       )}
@@ -229,6 +238,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowOpacity: 0.8,
     shadowRadius: 15,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    width: '100%',
+    zIndex: 999,
   },
   dottedBorder: {
     position: 'absolute',

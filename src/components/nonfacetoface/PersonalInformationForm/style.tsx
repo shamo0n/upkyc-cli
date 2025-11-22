@@ -68,16 +68,6 @@ export const DatePickerButton = styled.TouchableOpacity`
 export const DateText = styled.Text`
   color: #fff;
 `;
-// export const PickerWrapper = styled.View`
-//   width: ${getResponsiveWidth()}px;
-//   height: ${INPUT_HEIGHT}px;
-//   border-width: 1px;
-//   border-color: #ffffff4d;
-//   border-radius: 3px;
-//   justify-content: center;
-//   padding-horizontal: 12px;
-//   align-self: center;
-// `;
 export const PickerWrapper = styled(View)<{
   hasBorder?: boolean;
   zIndexValue?: number;
@@ -90,8 +80,13 @@ export const PickerWrapper = styled(View)<{
   justify-content: center;
   padding-horizontal: 12px;
   align-self: center;
+
+  /* Critical for DropDownPicker */
   z-index: ${({ zIndexValue }) => zIndexValue || 1};
+  elevation: ${({ zIndexValue }) => zIndexValue || 1};
+  overflow: visible;
 `;
+
 export const pickerSelectStyles = StyleSheet.create({
   inputIOS: {
     width: getResponsiveWidth(),
