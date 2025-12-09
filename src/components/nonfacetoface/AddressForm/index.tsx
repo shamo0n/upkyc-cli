@@ -18,6 +18,7 @@ import {
   getCountriesListAPI,
   getProvince_or_StateListAPI,
 } from '../../../Helpers/API';
+import { Dropdown } from 'react-native-element-dropdown';
 
 interface CountryOrProvince {
   label: string;
@@ -211,45 +212,53 @@ const AddressForm: React.FC<AddressFormProps> = ({
         <InputGroup>
           <Label>Country</Label>
           <PickerWrapper zIndexValue={4000} hasBorder={true}>
-            <DropDownPicker
-              open={countryOpen}
-              setOpen={setCountryOpen}
+            <Dropdown
+              data={citizenships}
               value={formData.countryId}
-              items={citizenships}
-              dropDownDirection="TOP"
-              searchable
+              labelField="label"
+              valueField="value"
               placeholder="Select Country"
-              style={{
-                backgroundColor: 'transparent',
-                borderWidth: 0,
-                elevation: 4000,
-                shadowOpacity: 0,
-              }}
-              dropDownContainerStyle={{
-                backgroundColor: '#fff',
-                borderWidth: 0,
-                elevation: 5000,
-                shadowOpacity: 0,
-                borderColor: '#fff',
-                zIndex: 6000,
-                ...(Platform.OS === 'android' && { marginTop: 4 }),
-              }}
-              arrowIconStyle={{ tintColor: '#fff' }}
-              textStyle={{ color: '#fff', fontSize: 16 }}
-              searchTextInputStyle={{
-                color: '#355042',
-                backgroundColor: 'transparent',
-                borderWidth: 0,
-              }}
-              placeholderStyle={{ color: '#fff' }}
-              listItemLabelStyle={{ color: '#355042' }}
-              listItemContainerStyle={{ backgroundColor: 'transparent' }}
-              onSelectItem={item => {
+              search={true}
+              searchPlaceholder="Search Country..."
+              maxHeight={250}
+              onChange={item => {
                 handleCountryChange(item.value);
                 validateField('countryId', item.value);
               }}
-              zIndex={3000}
-              zIndexInverse={1000}
+              style={{
+                backgroundColor: 'transparent',
+                borderWidth: 0,
+                paddingHorizontal: 0,
+                zIndex: 3000,
+              }}
+              containerStyle={{
+                backgroundColor: '#fff',
+                borderRadius: 6,
+                paddingVertical: 6,
+                elevation: 5000,
+                zIndex: 6000,
+                ...(Platform.OS === 'android' && { marginTop: 4 }), // Replaces dropDownDirection="TOP"
+              }}
+              placeholderStyle={{
+                color: '#fff',
+                fontSize: 16,
+              }}
+              selectedTextStyle={{
+                color: '#fff',
+                fontSize: 16,
+              }}
+              inputSearchStyle={{
+                color: '#355042',
+                backgroundColor: 'transparent',
+              }}
+              itemTextStyle={{
+                color: '#355042',
+                fontSize: 16,
+              }}
+              itemContainerStyle={{
+                backgroundColor: 'transparent',
+              }}
+              activeColor="transparent"
             />
           </PickerWrapper>
           {error.countryId && (
@@ -264,50 +273,71 @@ const AddressForm: React.FC<AddressFormProps> = ({
           <Label>Province / State</Label>
           {formData.countryId === canadaId && provinces.length > 0 ? (
             <PickerWrapper hasBorder={true}>
-              <DropDownPicker
-                open={provinceOpen}
-                setOpen={setProvinceOpen}
+              <Dropdown
+                data={provinces}
+                labelField="label"
+                valueField="value"
+                placeholder="Select Province / State"
                 value={
                   provinces.find(p => p.label === formData.provinceOrState)
                     ?.value ||
                   formData.provinceOrStateId ||
                   null
                 }
-                items={provinces}
-                dropDownDirection="TOP"
-                placeholder="Select Province / State"
-                onSelectItem={item => {
+                search={true}
+                searchPlaceholder="Search Province / State..."
+                maxHeight={250}
+                onChange={item => {
                   setFormData(prev => ({
                     ...prev,
                     provinceOrState: item.label,
                     provinceOrStateId: item.value,
                   }));
+
                   setTimeout(() => {
                     validateField('provinceOrState', item.label);
                   }, 0);
                 }}
-                onClose={() =>
+                onBlur={() =>
                   validateField('provinceOrState', formData.provinceOrState)
                 }
-                style={{ backgroundColor: 'transparent', borderWidth: 0 }}
-                dropDownContainerStyle={{
-                  backgroundColor: '#fff',
+                /* MAIN FIELD STYLING */
+                style={{
+                  backgroundColor: 'transparent',
                   borderWidth: 0,
-                  elevation: 0,
-                  shadowOpacity: 0,
-                  borderColor: '#fff',
+                  paddingHorizontal: 0,
+                  zIndex: 9999,
                 }}
-                arrowIconStyle={{ tintColor: '#fff' }}
-                textStyle={{ color: '#fff', fontSize: 16 }}
-                searchTextInputStyle={{
+                /* DROPDOWN PANEL */
+                containerStyle={{
+                  backgroundColor: '#fff',
+                  borderRadius: 6,
+                  paddingVertical: 6,
+                  elevation: 10,
+                  zIndex: 9999,
+                }}
+                /* TEXT STYLING */
+                placeholderStyle={{
+                  color: '#fff',
+                  fontSize: 16,
+                }}
+                selectedTextStyle={{
+                  color: '#fff',
+                  fontSize: 16,
+                }}
+                inputSearchStyle={{
                   color: '#355042',
                   backgroundColor: 'transparent',
                   borderWidth: 0,
                 }}
-                placeholderStyle={{ color: '#fff' }}
-                listItemLabelStyle={{ color: '#355042' }}
-                listItemContainerStyle={{ backgroundColor: 'transparent' }}
-                zIndex={9999}
+                itemTextStyle={{
+                  color: '#355042',
+                  fontSize: 16,
+                }}
+                itemContainerStyle={{
+                  backgroundColor: 'transparent',
+                }}
+                activeColor="transparent"
               />
             </PickerWrapper>
           ) : (

@@ -81,9 +81,11 @@ export const PickerWrapper = styled(View)<{
   padding-horizontal: 12px;
   align-self: center;
 
-  /* Critical for DropDownPicker */
+  /* REQUIRED for Android zIndex to work */
+  position: relative;
   z-index: ${({ zIndexValue }) => zIndexValue || 1};
   elevation: ${({ zIndexValue }) => zIndexValue || 1};
+
   overflow: visible;
 `;
 

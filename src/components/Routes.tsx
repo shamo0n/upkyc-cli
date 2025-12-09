@@ -94,7 +94,13 @@ export default function Routes() {
 
         {/*  Main App Screens */}
         <Stack.Screen name="Dashboard" component={Dashboard} />
-        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+        <Stack.Screen
+          name="ProfileScreen"
+          component={ProfileScreen}
+          options={{
+            freezeOnBlur: true,
+          }}
+        />
         <Stack.Screen name="SupportScreen" component={SupportScreen} />
         <Stack.Screen
           name="IDDetailsComponentSec"

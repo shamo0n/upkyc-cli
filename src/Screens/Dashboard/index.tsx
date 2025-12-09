@@ -23,6 +23,7 @@ import { AuthContext, useAuth } from '../../Contexts/AuthContext';
 import { GetCustomerProfileCompleteAPI } from '../../Helpers/API';
 import { RootStackParamList } from '../../components/Routes'; // ✅ import here
 import * as Progress from 'react-native-progress';
+import Animated, { SlideInLeft, SlideOutLeft } from 'react-native-reanimated';
 
 import {
   Container,
@@ -37,6 +38,7 @@ import {
   DashboardBox,
   StatusText,
   WelcomeText,
+  AnimatedDashboardBox,
 } from './style';
 import {
   DrivingLicenseIcon,
@@ -47,6 +49,7 @@ import {
 } from '../../Assets/images/SVG';
 import SideMenu from '../../components/SideMenu';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { FadeInUp } from 'react-native-reanimated';
 
 // ✅ Type definitions for navigation and route
 type DashboardNavigationProp = NativeStackNavigationProp<
@@ -206,6 +209,7 @@ const Dashboard: React.FC = () => {
     } else {
       navigation.navigate('KycProcessScreen', { customerProfile });
     }
+    setMenuOpen(false);
   };
   const handleSupportClick = () => {
     // Optionally, you can check some profile status if needed
@@ -349,27 +353,40 @@ const Dashboard: React.FC = () => {
             left: 0,
             width: windowWidth,
             height: windowHeight,
-            backgroundColor: 'rgba(0,0,0,0.5)',
+            backgroundColor: 'rgba(0,0,0,0.75)',
             zIndex: 999,
           }}
           activeOpacity={1}
           onPress={() => setMenuOpen(false)} // close when clicking outside
         >
-          <SideMenu
-            customerProfile={customerProfile}
-            onClose={() => setMenuOpen(false)}
-            onProfileClick={handleProfileClick}
-            onOnboardingClick={handleOnboardingClick}
-            onKycClick={handleKycClick}
-            onCamloClick={handleCamloClick}
-            onSupportClick={handleSupportClick}
-            onLogoutClick={handleLogout}
-          />
+          <Animated.View
+            entering={SlideInLeft.duration(450)}
+            exiting={SlideOutLeft.duration(400)}
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              height: windowHeight,
+              width: windowWidth * 0.75,
+              zIndex: 1000,
+            }}
+          >
+            <SideMenu
+              customerProfile={customerProfile}
+              onClose={() => setMenuOpen(false)}
+              onProfileClick={handleProfileClick}
+              onOnboardingClick={handleOnboardingClick}
+              onKycClick={handleKycClick}
+              onCamloClick={handleCamloClick}
+              onSupportClick={handleSupportClick}
+              onLogoutClick={handleLogout}
+            />
+          </Animated.View>
         </TouchableOpacity>
       )}
       {/* ===== MAIN DASHBOARD CONTENT ===== */}
 
-      <DashboardBox>
+      <AnimatedDashboardBox entering={FadeInUp.duration(600)}>
         <ProfileBox>
           <Text style={{ color: '#fff', fontSize: 16 }}>
             Profile Status:{' '}
@@ -455,7 +472,7 @@ const Dashboard: React.FC = () => {
             );
           })}
         </Grid>
-      </DashboardBox>
+      </AnimatedDashboardBox>
       <Toast />
     </Container>
   );

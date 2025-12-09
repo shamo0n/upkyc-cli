@@ -6,6 +6,7 @@ import {
   validateName,
   validateNumber,
 } from '../../../Utils/util';
+import { Dropdown } from 'react-native-element-dropdown';
 import {
   FormContainer,
   InputGroup,
@@ -183,69 +184,50 @@ const PersonalInformationForm: React.FC<Props> = ({
         {/* ✅ GENDER PICKER */}
         <InputGroup>
           <Label>Select Gender</Label>
-          <PickerWrapper zIndexValue={3000} hasBorder={true}>
-            <DropDownPicker
-              open={genderOpen}
+          <PickerWrapper zIndexValue={2500} hasBorder={true}>
+            <Dropdown
+              data={genderItems}
               value={genderValue}
-              items={genderItems}
-              setOpen={setGenderOpen}
-              setValue={setGenderValue}
-              setItems={setGenderItems}
-              onOpen={onGenderOpen}
-              searchable={true}
-              dropDownDirection="TOP"
-              disableBorderRadius={true}
-              searchPlaceholder="Search Gender..."
+              labelField="label"
+              valueField="value"
               placeholder="Select Gender"
-              onChangeValue={value => handleInputChange('gender', value || '')}
+              search={false} // <-- turn off search
+              maxHeight={200}
+              onChange={item => {
+                setGenderValue(item.value);
+                handleInputChange('gender', item.value || '');
+              }}
               style={{
                 backgroundColor: 'transparent',
                 borderWidth: 0,
-                elevation: 0,
-                shadowOpacity: 0,
-                zIndex: 5000,
-              }}
-              dropDownContainerStyle={{
-                backgroundColor: '#fff',
-                borderWidth: 0,
-                elevation: 0,
-                shadowOpacity: 0,
-                borderColor: '#fff',
-                zIndex: 6000,
-                ...(Platform.OS === 'android' && { marginTop: 4 }),
-              }}
-              arrowIconStyle={{
-                tintColor: '#fff',
-              }}
-              textStyle={{
-                color: '#fff',
-                fontSize: 16,
-              }}
-              searchTextInputStyle={{
-                color: '#355042',
-                backgroundColor: 'transparent',
-                borderWidth: 0,
+                paddingHorizontal: 0,
               }}
               placeholderStyle={{
                 color: '#fff',
+                fontSize: 16,
               }}
-              listItemLabelStyle={{
+              selectedTextStyle={{
+                color: '#fff',
+                fontSize: 16,
+              }}
+              itemTextStyle={{
                 color: '#355042',
+                fontSize: 16,
               }}
-              listItemContainerStyle={{
-                backgroundColor: 'transparent',
+              itemContainerStyle={{
+                backgroundColor: '#fff',
               }}
-              listMessageContainerStyle={{
-                backgroundColor: 'transparent', // or any background you prefer
+              containerStyle={{
+                backgroundColor: '#fff',
+                borderRadius: 6,
+                paddingVertical: 6,
+                elevation: 10,
+                zIndex: 99999,
               }}
-              listMessageTextStyle={{
-                color: '#4F6659', // custom text color
-                fontSize: 14,
-                fontWeight: '600',
-              }}
-              zIndex={9999}
+              activeColor="transparent"
             />
           </PickerWrapper>
+
           {error.gender && <ErrorText>{error.gender}</ErrorText>}
         </InputGroup>
 
@@ -280,64 +262,28 @@ const PersonalInformationForm: React.FC<Props> = ({
         <InputGroup>
           <Label>Select Citizenship</Label>
           <PickerWrapper zIndexValue={3000} hasBorder={true}>
-            <DropDownPicker
-              open={citizenshipOpen}
+            <Dropdown
+              data={citizenshipItems}
+              labelField="label"
+              valueField="value"
               value={citizenshipValue}
-              items={citizenshipItems}
-              setOpen={setCitizenshipOpen}
-              setValue={setCitizenshipValue}
-              setItems={setCitizenshipItems}
-              onOpen={onCitizenshipOpen}
-              searchable={true}
-              dropDownDirection="TOP"
-              searchPlaceholder="Search Citizenship..."
+              onChange={item => handleInputChange('citizenship', item.value)}
               placeholder="Select Citizenship"
-              onChangeValue={value => handleInputChange('citizenship', value)}
+              searchPlaceholder="Search Citizenship... "
+              search
+              maxHeight={250}
               style={{
                 backgroundColor: 'transparent',
-                borderWidth: 0,
-                elevation: 0,
-                shadowOpacity: 0,
-              }}
-              dropDownContainerStyle={{
-                backgroundColor: '#fff',
-                borderWidth: 0,
-                elevation: 0,
-                shadowOpacity: 0,
+                height: 50,
                 borderColor: '#fff',
-                zIndex: 6000,
-                ...(Platform.OS === 'android' && { marginTop: 4 }),
+                paddingHorizontal: 12,
               }}
-              arrowIconStyle={{
-                tintColor: '#fff', // your color
+              placeholderStyle={{ color: '#fff' }}
+              selectedTextStyle={{ color: '#fff' }}
+              itemTextStyle={{ color: '#355042' }}
+              containerStyle={{
+                borderRadius: 8,
               }}
-              textStyle={{
-                color: '#fff',
-                fontSize: 16,
-              }}
-              searchTextInputStyle={{
-                color: '#355042',
-                backgroundColor: 'transparent',
-                borderWidth: 0,
-              }}
-              placeholderStyle={{
-                color: '#fff',
-              }}
-              listItemLabelStyle={{
-                color: '#355042',
-              }}
-              listItemContainerStyle={{
-                backgroundColor: 'transparent',
-              }}
-              listMessageContainerStyle={{
-                backgroundColor: 'transparent', // or any background you prefer
-              }}
-              listMessageTextStyle={{
-                color: '#4F6659', // custom text color
-                fontSize: 14,
-                fontWeight: '600',
-              }}
-              zIndex={9999}
             />
           </PickerWrapper>
           {error.citizenship && <ErrorText>{error.citizenship}</ErrorText>}

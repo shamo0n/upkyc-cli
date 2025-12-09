@@ -1,29 +1,32 @@
 import styled from 'styled-components/native';
+import { Animated, Platform, View, ScrollView, ImageBackground } from 'react-native';
 
-import { ImageBackground, Platform, View, ScrollView } from 'react-native';
-export const LoginBoxContainer = styled(View).attrs(() => ({
-  // Platform-specific shadows
-  style: Platform.select({
-    ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.35,
-      shadowRadius: 30,
-    },
-    android: {
-      elevation: 10,
-    },
-  }),
-}))`
+// Create Animated View
+const AnimatedBox = Animated.createAnimatedComponent(View);
+
+export const LoginBoxContainer = styled(AnimatedBox)`
   width: 100%;
-  padding: 24px; /* roughly 3rem */
+  padding: 24px;
   border-radius: 18px;
   border-width: 1px;
   border-color: rgba(255, 255, 255, 0.3);
   background-color: rgba(42, 71, 56, 0.82);
   align-items: center;
   justify-content: center;
+
+  ${Platform.select({
+    ios: `
+      shadow-color: #000;
+      shadow-offset: 0px 12px;
+      shadow-opacity: 0.35;
+      shadow-radius: 30px;
+    `,
+    android: `
+      elevation: 10;
+    `,
+  })}
 `;
+
 // Background Image wrapper
 export const Background = styled(ImageBackground)`
   flex: 1;

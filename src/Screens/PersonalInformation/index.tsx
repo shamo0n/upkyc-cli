@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
-  ToastAndroid,
   Platform,
   View,
   KeyboardAvoidingView,
@@ -94,12 +93,6 @@ const PersonalInformationScreen = () => {
     handleGetCountriesList();
   }, []);
 
-  const showToast = (message: string) => {
-    if (Platform.OS === 'android')
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    else console.log('Toast:', message);
-  };
-
   // ===================== GET COUNTRIES =====================
   const handleGetCountriesList = async () => {
     getCountriesListAPI((response: any) => {
@@ -153,7 +146,10 @@ const PersonalInformationScreen = () => {
     // If any errors found — update state and stop
     if (Object.keys(newError).length > 0) {
       setError(newError);
-      showToast('Please fill in all required fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Please fill in all required fields',
+      });
       return Promise.reject('Validation error');
     }
 
@@ -191,15 +187,24 @@ const PersonalInformationScreen = () => {
         'true';
 
       if (messageCode === '2' && !isErrorMessage) {
-        showToast(message || 'Personal Info Saved');
+        Toast.show({
+          type: 'success',
+          text1: message || 'Personal Info Saved',
+        });
         return true;
       } else {
-        showToast(message || 'Save Failed');
+        Toast.show({
+          type: 'error',
+          text1: message || 'Save Failed',
+        });
         throw new Error(message || 'Save Failed');
       }
     } catch (error: any) {
       console.error('handlePersonalInformation error:', error);
-      showToast('Failed to save personal info.');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to save personal info.',
+      });
       return false;
     } finally {
       setLoading(false);
@@ -208,12 +213,19 @@ const PersonalInformationScreen = () => {
 
   const handleContactInformation = async () => {
     if (!formData.mobile) {
-      showToast('Please enter your mobile number.');
+      Toast.show({
+        type: 'error',
+        text1: 'Mobile number required',
+        text2: 'Please enter your mobile number.',
+      });
       return Promise.reject('Validation error');
     }
     const numericValue = formData.mobile.replace(/\D/g, '');
     if (numericValue.length < 10 || numericValue.length > 15) {
-      showToast('Mobile number must be 10–15 digits.');
+      Toast.show({
+        type: 'error',
+        text1: 'Mobile number must be 10–15 digits.',
+      });
       return Promise.reject('Validation error');
     }
 
@@ -235,65 +247,22 @@ const PersonalInformationScreen = () => {
           children.find((c: any) => c.name === 'Message')?.value || '';
 
         if (messageCode === '2') {
-          showToast(message || 'Contact Info Saved');
+          Toast.show({
+            type: 'success',
+            text1: message || 'Contact Info Saved',
+          });
           resolve(true);
         } else {
-          showToast(message || 'Failed to Save');
+          Toast.show({
+            type: 'error',
+            text1: message || 'Failed to Save',
+          });
           reject(false);
         }
       });
     });
   };
 
-  // const handleAddressInformation = async () => {
-  //   const newError: any = {};
-
-  //   if (!formData.streetAddress)
-  //     newError.streetAddress = 'Street address is required';
-  //   if (!formData.city) newError.city = 'City is required';
-  //   if (!formData.countryId) newError.countryId = 'Country is required';
-  //   if (!formData.postalCode) newError.postalCode = 'Postal code is required';
-
-  //   if (Object.keys(newError).length > 0) {
-  //     setError(newError);
-  //     showToast('Please fill in all required fields');
-  //     return Promise.reject('Validation error');
-  //   }
-
-  //   setError({}); // clear errors before proceeding
-
-  //   const body = {
-  //     CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
-  //     Email: authUser?.Email,
-  //     StreetAddress: formData.streetAddress,
-  //     City: formData.city,
-  //     Province: formData.provinceOrState || '',
-  //     PostalCode: formData.postalCode || '',
-  //     CountryId: formData.countryId || '',
-  //     POBox: formData.postalCode || '',
-  //   };
-
-  //   setLoading(true);
-  //   return new Promise<boolean>((resolve, reject) => {
-  //     UpdateAddressInfoAPI(body, (response: any) => {
-  //       setLoading(false);
-  //       const children = response?.responseBody?.children?.[0]?.children || [];
-  //       const messageCode = children.find(
-  //         (c: any) => c.name === 'MessageCode',
-  //       )?.value;
-  //       const message =
-  //         children.find((c: any) => c.name === 'Message')?.value || '';
-
-  //       if (messageCode === '2') {
-  //         showToast(message || 'Address Saved');
-  //         resolve(true);
-  //       } else {
-  //         showToast(message || 'Failed to Save');
-  //         reject(false);
-  //       }
-  //     });
-  //   });
-  // };
   const handleAddressInformation = async () => {
     const newError: any = {};
 
@@ -327,7 +296,10 @@ const PersonalInformationScreen = () => {
     // ✅ If there are any errors, block progression
     if (Object.keys(newError).length > 0) {
       setError(newError);
-      showToast('Please fill in all required fields correctly');
+      Toast.show({
+        type: 'error',
+        text1: 'Please fill in all required fields correctly',
+      });
       return Promise.reject('Validation error');
     }
 
@@ -356,10 +328,16 @@ const PersonalInformationScreen = () => {
           children.find((c: any) => c.name === 'Message')?.value || '';
 
         if (messageCode === '2') {
-          showToast(message || 'Address Saved');
+          Toast.show({
+            type: 'success',
+            text1: message || 'Address Saved',
+          });
           resolve(true);
         } else {
-          showToast(message || 'Failed to Save');
+          Toast.show({
+            type: 'error',
+            text1: message || 'Failed to Save',
+          });
           reject(false);
         }
       });
@@ -748,13 +726,19 @@ const PersonalInformationScreen = () => {
           break;
         case 4:
           if (!idType) {
-            showToast('Please select an ID type.');
+            Toast.show({
+              type: 'error',
+              text1: 'Please select an ID type.',
+            });
             isValid = false;
           }
           break;
         case 5:
           if (!formData.selfie) {
-            showToast('Please upload a selfie before proceeding.');
+            Toast.show({
+              type: 'error',
+              text1: 'Please upload a selfie before proceeding.',
+            });
             isValid = false;
           }
           break;
@@ -765,7 +749,10 @@ const PersonalInformationScreen = () => {
       setCurrentStep(prev => prev + 1);
     } catch (err) {
       console.warn(err);
-      showToast('Something went wrong. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong. Please try again.',
+      });
     }
   };
 
@@ -787,7 +774,6 @@ const PersonalInformationScreen = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={{ flex: 1 }}
         >
-          {/* <TouchableWithoutFeedback onPress={Keyboard.dismiss}> */}
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
@@ -919,7 +905,6 @@ const PersonalInformationScreen = () => {
               </ButtonRow>
             </Box>
           </ScrollView>
-          {/* </TouchableWithoutFeedback> */}
         </KeyboardAvoidingView>
         <Toast />
       </Container>

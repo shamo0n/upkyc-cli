@@ -1,24 +1,22 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef, FC } from 'react';
 import {
-  ScrollView,
   Alert,
-  Dimensions,
   View,
   Modal,
-  Platform,
   TouchableOpacity,
   Text,
   Animated,
   Easing,
 } from 'react-native';
+
 import { AuthContext } from '../../Contexts/AuthContext';
 import { GetCustomerProfileCompleteAPI } from '../../Helpers/API';
 import LoadingSpinner from '../../components/LoadingSpinner';
+
 import QRCode from 'react-native-qrcode-svg';
 import RNHTMLtoPDF from 'react-native-html-to-pdf-fix';
 import Share from 'react-native-share';
 import RNFS from 'react-native-fs';
-import ViewShot, { captureRef } from 'react-native-view-shot';
 
 import {
   Container,
@@ -38,7 +36,6 @@ import {
   QRSection,
   ProfileItem,
   ImageBox,
-  ProfileItemText,
   BoldText,
   CloseText,
   IDImagesContainer,
@@ -50,15 +47,20 @@ import {
 
 import ProfileHeader from '../../components/ProfileHeader';
 import AppHeader from '../../components/AppHeader';
+
 import { RootStackParamList } from '../../components/Routes';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import {
   ArrowrighttIcon,
   DnloadIcon,
-  PDFDownloadIcon,
   RshareIcon,
 } from '../../Assets/images/SVG';
+
+// ------------------------------------------------------------
+// TYPES
+// ------------------------------------------------------------
 
 interface CustomerProfile {
   FirstName?: string;
@@ -83,30 +85,46 @@ type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'ProfileScreen'
 >;
-type ProfileScreenRouteProp = RouteProp<RootStackParamList, 'ProfileScreen'>;
 
 interface ProfileScreenProps {
   navigation: ProfileScreenNavigationProp;
-  route: ProfileScreenRouteProp;
 }
 
-const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
+// ------------------------------------------------------------
+// MAIN COMPONENT
+// ------------------------------------------------------------
+
+const ProfileScreen: FC<ProfileScreenProps> = ({ navigation }) => {
   const { authUser } = useContext(AuthContext);
   const [customerProfile, setCustomerProfile] =
     useState<CustomerProfile | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
-  const [slideAnim] = useState(new Animated.Value(0));
-  // const qrRef = useRef<ViewShot>(null);
+
+  const slideAnim = useRef(new Animated.Value(0)).current;
   const qrSvgRef = useRef<any>(null);
 
+  // Prevent refetching on every mount or navigation
+  const hasFetchedRef = useRef(false);
+  // ------------------------------------------------------------
+  // FETCH PROFILE
+  // ------------------------------------------------------------
+
   useEffect(() => {
-    if (authUser) fetchCustomerProfile();
+    if (!authUser) return;
+
+    // ensures API is called only once per session
+    if (hasFetchedRef.current) return;
+
+    hasFetchedRef.current = true;
+    fetchCustomerProfile();
   }, [authUser]);
 
   const fetchCustomerProfile = () => {
     setLoading(true);
+
     const body = {
       CUSTID_DIGITAL_GID: authUser?.CUSTID_DIGITAL_GID,
       Email: authUser?.Email,
@@ -114,8 +132,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
     GetCustomerProfileCompleteAPI(body, (response: any) => {
       setLoading(false);
+
       const resultChildren =
         response?.responseBody?.children?.[0]?.children || [];
+
       if (!resultChildren.length) {
         Alert.alert('No data', 'No profile data found');
         return;
@@ -123,8 +143,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
       const extractValue = (name: string) =>
         resultChildren.find((c: any) => c.name === name)?.value || '';
+
       const formatDOB = (dob: string) => {
-        if (!dob) return '';
         const match = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
         if (match) {
           const [, month, day, year] = match;
@@ -133,15 +153,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         return dob;
       };
 
-      const rawDOB = extractValue('DOB');
-      const formattedDOB = formatDOB(rawDOB);
-
       setCustomerProfile({
         FirstName: extractValue('FIRST_NAME'),
         MiddleName: extractValue('MIDLE_NAME'),
         LastName: extractValue('LAST_NAME'),
         Gender: extractValue('Gender'),
-        DOB: formattedDOB,
+        DOB: formatDOB(extractValue('DOB')),
         Phone: extractValue('PHONE'),
         Country: extractValue('COUNTRY'),
         Province: extractValue('Province'),
@@ -156,6 +173,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       });
     });
   };
+
+  // ------------------------------------------------------------
+  // SHARE SHEET ANIMATIONS
+  // ------------------------------------------------------------
 
   const openShareSheet = () => {
     setShowShareSheet(true);
@@ -175,150 +196,103 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       useNativeDriver: true,
     }).start(() => setShowShareSheet(false));
   };
+
+  // ------------------------------------------------------------
+  // SHARE PDF (ID IMAGES)
+  // ------------------------------------------------------------
+
   const handleShareIDImagesPDF = async () => {
     if (!customerProfile) return;
 
     try {
-      const htmlContent = `
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              background-color: #f9f9f9;
-              margin: 0;
-              padding: 20px;
-            }
-            h2 {
-              color: #333;
-              margin-bottom: 20px;
-            }
-            .img-block {
-              margin-bottom: 25px;
-            }
-            .img-block img {
-              width: 250px;
-              height: 160px;
-              object-fit: cover;
-              border-radius: 10px;
-              border: 1px solid #ccc;
-            }
-            .label {
-              margin-bottom: 8px;
-              font-weight: bold;
-              color: #444;
-            }
-          </style>
-        </head>
-        <body>
-          <h2>Customer ID Documents</h2>
-          ${
-            customerProfile.IDFRONT_FILEPATH
-              ? `<div class="img-block">
-                  <div class="label">ID Front</div>
-                  <img src="${customerProfile.IDFRONT_FILEPATH}" />
-                </div>`
-              : ''
-          }
-          ${
-            customerProfile.IDBACK_FILEPATH
-              ? `<div class="img-block">
-                  <div class="label">ID Back</div>
-                  <img src="${customerProfile.IDBACK_FILEPATH}" />
-                </div>`
-              : ''
-          }
+      const html = `
+        <html>
+        <body style="text-align:center;font-family:Arial">
+        <h2>Customer ID Documents</h2>
+        ${
+          customerProfile.IDFRONT_FILEPATH
+            ? `<img style="width:260px" src="${customerProfile.IDFRONT_FILEPATH}" />`
+            : ''
+        }
+        ${
+          customerProfile.IDBACK_FILEPATH
+            ? `<img style="width:260px;margin-top:20px" src="${customerProfile.IDBACK_FILEPATH}" />`
+            : ''
+        }
         </body>
-      </html>
-    `;
+        </html>
+      `;
 
       const pdf = await RNHTMLtoPDF.convert({
-        html: htmlContent,
+        html,
         fileName: `Customer_IDs_${customerProfile.Email || 'Profile'}`,
         base64: false,
       });
 
       await Share.open({
-        title: 'Share ID Images PDF',
         url: `file://${pdf.filePath}`,
         type: 'application/pdf',
         failOnCancel: false,
       });
 
       closeShareSheet();
-    } catch (error) {
-      console.error(' PDF Share Error:', error);
-      Alert.alert('Error', 'Failed to generate or share PDF.');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to generate or share PDF');
     }
   };
 
-  const handleDownloadPDF = async () => {
-    openShareSheet(); // show bottom sheet first
-  };
+  // ------------------------------------------------------------
+  // SHARE QR
+  // ------------------------------------------------------------
 
-  // const handleShareQRCode = async () => {
-  //   try {
-  //     if (!qrRef.current) return;
-  //     const uri = await captureRef(qrRef, { format: 'png', quality: 1 });
-  //     await Share.open({
-  //       url: `file://${uri}`,
-  //       type: 'image/png',
-  //       title: 'My QR Code',
-  //       failOnCancel: false,
-  //     });
-  //     closeShareSheet();
-  //   } catch (error) {
-  //     console.error(' Share Error:', error);
-  //     Alert.alert('Error', 'Failed to share QR image');
-  //   }
-  // };
   const handleShareQRCode = async () => {
     try {
       if (!qrSvgRef.current) return;
 
-      // 1️⃣ Get the base64 image data directly from the QRCode component
       qrSvgRef.current.toDataURL(async (data: string) => {
         const path = `${RNFS.CachesDirectoryPath}/qrcode.png`;
 
-        // 2️⃣ Write the base64 data to a PNG file
         await RNFS.writeFile(path, data, 'base64');
 
-        // 3️⃣ Share the file
         await Share.open({
           url: `file://${path}`,
           type: 'image/png',
-          title: 'My QR Code',
           failOnCancel: false,
         });
 
         closeShareSheet();
       });
     } catch (error) {
-      console.error('Share Error:', error);
-      Alert.alert('Error', 'Failed to share QR image');
+      Alert.alert('Error', 'Failed to share QR code');
     }
   };
 
-  const handleShareURL = async () => {
-    try {
-      if (!customerProfile) return;
-      const shareUrl =
-        customerProfile.iscaseRejected !== '0'
-          ? `https://amlhlep.com/OnBoarding_AML/site/OTP.html?CUSTOMER_GID=${customerProfile.Email}`
-          : `https://amlhlep.com/OnBoarding_AML/site/waiting.html`;
+  // ------------------------------------------------------------
+  // SHARE URL
+  // ------------------------------------------------------------
 
+  const handleShareURL = async () => {
+    if (!customerProfile) return;
+
+    const link =
+      customerProfile.iscaseRejected !== '0'
+        ? `https://amlhlep.com/OnBoarding_AML/site/OTP.html?CUSTOMER_GID=${customerProfile.Email}`
+        : `https://amlhlep.com/OnBoarding_AML/site/waiting.html`;
+
+    try {
       await Share.open({
-        message: `Open your customer verification link:\n${shareUrl}`,
+        message: `Customer verification link:\n${link}`,
         failOnCancel: false,
       });
       closeShareSheet();
-    } catch (error) {
-      console.error(' URL Share Error:', error);
+    } catch {
       Alert.alert('Error', 'Failed to share URL');
     }
   };
+
+  // ------------------------------------------------------------
+  // UI STATES
+  // ------------------------------------------------------------
 
   if (loading)
     return (
@@ -353,6 +327,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     outputRange: [300, 0],
   });
 
+  // ------------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------------
+
   return (
     <Container source={require('../../Assets/images/mobilebg.jpg')}>
       <AppHeader showBack onBackPress={() => navigation.goBack()} />
@@ -384,17 +362,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 <ArrowrighttIcon width={12} height={12} />
               </ImageBox>
               <ProfileItemContent>
-                {/* <BoldText>{item.label}: </BoldText> {item.value || '-'} */}
                 <BoldText>{item.label}: </BoldText>
-                <ValueText numberOfLines={0} ellipsizeMode="tail">
-                  {item.value || '-'}
-                </ValueText>
+                <ValueText>{item.value || '-'}</ValueText>
               </ProfileItemContent>
             </ProfileItem>
           ))}
         </InfoList>
 
-        {/* 🔹 QR SECTION */}
         <QRContainer>
           <QRSection>
             <QRBox>
@@ -417,17 +391,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <ButtonText>Download</ButtonText>
             </ActionButton>
 
-            <ActionButton onPress={handleDownloadPDF}>
+            <ActionButton onPress={openShareSheet}>
               <RshareIcon width={16} height={16} />
-              <ButtonText>Shares</ButtonText>
+              <ButtonText>Share</ButtonText>
             </ActionButton>
           </Actions>
         </QRContainer>
       </ProfileBox>
 
-      {/* 🔹 ID Images Modal */}
+      {/* ID Modal */}
       {showModal && (
-        <Modal transparent animationType="fade" visible={showModal}>
+        <Modal transparent animationType="fade">
           <ModalOverlay>
             <ModalContent>
               <DownloadButton
@@ -470,17 +444,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </Modal>
       )}
 
-      {/* 🔹 Bottom Share Sheet */}
+      {/* Bottom Share Sheet */}
       {showShareSheet && (
-        <Modal transparent visible={showShareSheet} animationType="none">
+        <Modal transparent animationType="none">
           <TouchableOpacity
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.4)',
-            }}
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
             activeOpacity={1}
             onPress={closeShareSheet}
           />
+
           <Animated.View
             style={{
               backgroundColor: '#fff',
@@ -507,11 +479,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
             <TouchableOpacity
               onPress={handleShareQRCode}
-              style={{
-                padding: 14,
-                borderBottomWidth: 1,
-                borderColor: '#eee',
-              }}
+              style={{ padding: 14, borderBottomWidth: 1, borderColor: '#eee' }}
             >
               <Text style={{ textAlign: 'center', fontSize: 16 }}>
                 Share QR Code
@@ -520,11 +488,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
             <TouchableOpacity
               onPress={handleShareURL}
-              style={{
-                padding: 14,
-                borderBottomWidth: 1,
-                borderColor: '#eee',
-              }}
+              style={{ padding: 14, borderBottomWidth: 1, borderColor: '#eee' }}
             >
               <Text style={{ textAlign: 'center', fontSize: 16 }}>
                 Share URL

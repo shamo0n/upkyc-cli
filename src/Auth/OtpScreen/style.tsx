@@ -96,21 +96,23 @@ export const OtpBold = styled.Text`
 
 export const OtpInputContainer = styled.View`
   flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 30px;
 `;
-
 export const OtpInput = styled.TextInput`
-  width: 50px;
-  height: 50px;
-  font-size: 22px;
+  width: 55px;
+  height: 60px;
+  font-size: 26px;
+  text-align: center;
   border-width: 2px;
-  border-color: #fff;
-  border-radius: 8px;
+  border-color: rgba(255, 255, 255, 0.65);
+  border-radius: 10px;
   color: #fff;
   background-color: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
 `;
-
 export const Button = styled.TouchableOpacity<{ disabled?: boolean }>`
   height: 50px;
   width: 100%;
@@ -132,7 +134,7 @@ export const ButtonText = styled.Text`
 `;
 
 export const ResendButton = styled.TouchableOpacity`
-margin-top: 10px;
+  margin-top: 10px;
 `;
 
 export const ResendText = styled.Text`

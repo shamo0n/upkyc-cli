@@ -277,6 +277,27 @@ const OtpScreen: React.FC = () => {
     const masked = '*'.repeat(username.length - 3);
     return `${firstChar}${masked}${lastChars}@${domain}`;
   };
+  const handleOtpChange = (index: number, value: string) => {
+    if (value.length > 1) return;
+    if (!/^\d?$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    if (value && index < otp.length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpBackspace = (index: number) => {
+    if (otp[index] === '' && index > 0) {
+      const newOtp = [...otp];
+      newOtp[index - 1] = '';
+      setOtp(newOtp);
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
 
   return (
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
@@ -299,27 +320,10 @@ const OtpScreen: React.FC = () => {
                   key={index}
                   ref={el => (inputRefs.current[index] = el)}
                   value={digit}
-                  onChangeText={val => {
-                    if (!/^\d*$/.test(val)) return; // only numbers
-
-                    const newOtp = [...otp];
-                    newOtp[index] = val;
-                    setOtp(newOtp);
-
-                    if (val.length === 1 && index < otp.length - 1) {
-                      inputRefs.current[index + 1]?.focus();
-                    }
-                  }}
+                  onChangeText={val => handleOtpChange(index, val)}
                   onKeyPress={({ nativeEvent }) => {
-                    if (
-                      nativeEvent.key === 'Backspace' &&
-                      otp[index].length === 0 &&
-                      index > 0
-                    ) {
-                      inputRefs.current[index - 1]?.focus();
-                      const newOtp = [...otp];
-                      newOtp[index - 1] = '';
-                      setOtp(newOtp);
+                    if (nativeEvent.key === 'Backspace') {
+                      handleOtpBackspace(index);
                     }
                   }}
                   keyboardType="number-pad"
@@ -328,16 +332,6 @@ const OtpScreen: React.FC = () => {
                   placeholderTextColor="#fff"
                   scrollEnabled={false}
                   textAlign="center"
-                  style={{
-                    color: '#fff',
-                    fontSize: 24,
-                    borderBottomWidth: 2,
-                    borderColor: '#fff',
-                    marginHorizontal: 5,
-                    width: 50,
-                    height: 55,
-                    textAlignVertical: 'center',
-                  }}
                 />
               ))}
             </OtpInputContainer>

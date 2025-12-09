@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
   Keyboard,
+  Animated,
 } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
@@ -64,9 +65,22 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
-    // localStorage?.removeItem?.('isRegistering');
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const handleSignup = () => {
@@ -192,7 +206,12 @@ const Login: React.FC = () => {
         extraScrollHeight={Platform.OS === 'ios' ? 80 : 0}
         keyboardOpeningTime={100}
       >
-        <LoginBoxContainer>
+        <LoginBoxContainer
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY }],
+          }}
+        >
           <Logo source={require('../../Assets/images/up-logo.png')} />
           <Title>Get Started</Title>
           <Subtitle>
