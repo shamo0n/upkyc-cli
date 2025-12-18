@@ -12,7 +12,6 @@ export const LoginBoxContainer = styled(AnimatedBox)`
   border-color: rgba(255, 255, 255, 0.3);
   background-color: rgba(42, 71, 56, 0.82);
   align-items: center;
-  justify-content: center;
 
   ${Platform.select({
     ios: `
@@ -31,7 +30,6 @@ export const LoginBoxContainer = styled(AnimatedBox)`
 export const Background = styled(ImageBackground)`
   flex: 1;
   width: 100%;
-  height: 100%;
   background-color: rgba(42, 71, 56, 0.82);
 `;
 
@@ -40,7 +38,7 @@ export const Container = styled(ScrollView).attrs({
   contentContainerStyle: {
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    // justifyContent: 'center',
     padding: 20,
   },
 })``;
@@ -86,6 +84,8 @@ export const Suggestions = styled.View`
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   margin-top: 5px;
+  z-index: 10;
+  elevation: 10;
 `;
 
 export const SuggestionText = styled.Text`

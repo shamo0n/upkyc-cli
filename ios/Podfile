@@ -2,6 +2,9 @@ require_relative '../node_modules/react-native/scripts/react_native_pods.rb'
 
 platform :ios, '15.1'
 
+# Firebase Swift pods fix + avoid PromisesObjC header errors
+use_frameworks! :linkage => :static     # ← IMPORTANT FIX
+
 install! 'cocoapods',
   :deterministic_uuids => false
 
@@ -13,58 +16,24 @@ target 'Upkyc' do
     :hermes_enabled => true
   )
 
-  # Firebase + Swift pods using modular headers
-  firebase_pods = [
-    'GoogleUtilities',
-    'GoogleDataTransport',
-    'FirebaseCore',
-    'FirebaseCoreInternal',
-    'FirebaseCoreExtension',
-    'FirebaseInstallations',
-    'FirebaseCrashlytics',
-    'FirebaseRemoteConfig',
-    'FirebaseAnalytics',
-    'FirebaseABTesting',
-    'FirebaseSessions'
-  ]
+  # Firebase
+  pod 'Firebase/Core'
+  pod 'Firebase/Analytics'
+  pod 'Firebase/Crashlytics'
+  pod 'Firebase/RemoteConfig'
 
-  firebase_pods.each do |p|
-    pod p, :modular_headers => true
-  end
-
-  # nanopb must generate a module map
-  pod 'nanopb', :modular_headers => true
-
-  # Fix ZIPFoundation build explosions
-  pod 'ZIPFoundation', :modular_headers => true
-
-  # --- Fix nanopb static build ---
-  pre_install do |installer|
-    installer.pod_targets.each do |pod|
-      if pod.name == 'nanopb'
-        def pod.build_type
-          Pod::BuildType.static_library
-        end
-      end
-    end
-  end
+  pod 'nanopb'
+  pod 'ZIPFoundation'
 
   post_install do |installer|
-    react_native_post_install(
-      installer,
-      :mac_catalyst_enabled => false
-    )
+    react_native_post_install(installer, :mac_catalyst_enabled => false)
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-
-        # REQUIRED FIXES for ZIPFoundation and Swift pods
         config.build_settings['DEFINES_MODULE'] = 'YES'
         config.build_settings['CLANG_ENABLE_MODULES'] = 'YES'
         config.build_settings['BUILD_LIBRARY_FOR_DISTRIBUTION'] = 'NO'
-
-        # Ensure correct dSYM generation including Hermes
-        config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       end
     end
   end

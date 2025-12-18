@@ -11,7 +11,8 @@ import PDFDownloadIcon from './pdfdnload.svg';
 import ProfileViewIcon from './profileview.svg';
 import SelectedIcon from './tick-circle.svg';
 import IdUploadIcon from './directbox-send.svg';
+import FaceIDIcon from './Face_ID_logo.svg';
 
 
 
-export { IdCardIcon, DrivingLicenseIcon, PassportIcon,OnnboardingIcon,KycIcon,RshareIcon,DnloadIcon,ArrowrighttIcon,DownloadIcon,PDFDownloadIcon,ProfileViewIcon,SelectedIcon,IdUploadIcon };
+export { IdCardIcon, DrivingLicenseIcon, PassportIcon,OnnboardingIcon,KycIcon,RshareIcon,DnloadIcon,ArrowrighttIcon,DownloadIcon,PDFDownloadIcon,ProfileViewIcon,SelectedIcon,IdUploadIcon,FaceIDIcon };

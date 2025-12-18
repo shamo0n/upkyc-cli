@@ -5,95 +5,102 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+
 import LoadingSpinner from '../../components/LoadingSpinner';
+import AppHeader from '../../components/AppHeader';
+
 import { AuthContext } from '../../Contexts/AuthContext';
 import {
   OTPVerifyOnSignupAPI,
   SendOTPVerificationAPI,
 } from '../../Helpers/API';
+
 import {
-  ScrollContainer,
-  BackButton,
-  BackText,
-  OtpBox,
   OtpTitle,
   OtpInfo,
   OtpBold,
   OtpInputContainer,
   OtpInput,
-  SubmitButton,
-  SubmitButtonText,
   ResendButton,
   ResendText,
   ErrorMessage,
   Background,
   ButtonText,
   Button,
-  Container,
   LoginBoxContainer,
 } from './style';
-import AppHeader from '../../components/AppHeader';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
+import {
+  enableBiometrics,
+  isBiometricAvailable,
+  saveBiometricToken,
+} from '../../Utils/biometricAuth';
 
 const OtpScreen: React.FC = () => {
-  const { authUser, saveUserSession, setIsLoggedIn } = useContext(AuthContext);
+  const { authUser, setIsLoggedIn } = useContext(AuthContext);
   const navigation = useNavigation<any>();
 
   const [loading, setLoading] = useState(false);
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [errorMessage, setErrorMessage] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
 
   const inputRefs = useRef<Array<TextInput | null>>([]);
 
-  // Resend Timer
+  /* ───────────────────────────────
+     Resend OTP timer
+  ─────────────────────────────── */
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (resendTimer > 0) {
-      timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-    }
+    if (resendTimer <= 0) return;
+    const timer = setTimeout(() => setResendTimer(t => t - 1), 1000);
     return () => clearTimeout(timer);
   }, [resendTimer]);
 
-  const handleChange = (index: number, value: string) => {
+  /* ───────────────────────────────
+     OTP input handlers
+  ─────────────────────────────── */
+  const handleOtpChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    if (value && index < 3) inputRefs.current[index + 1]?.focus();
+
+    const updated = [...otp];
+    updated[index] = value;
+    setOtp(updated);
+
+    if (value && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
   };
 
-  const handleKeyPress = (index: number, key: string) => {
-    if (key === 'Backspace' && !otp[index] && index > 0) {
+  const handleOtpBackspace = (index: number) => {
+    if (!otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  const handleOtpSubmit = () => {
+  /* ───────────────────────────────
+     Submit OTP
+  ─────────────────────────────── */
+  const handleOtpSubmit = async () => {
     Keyboard.dismiss();
-    console.log('--- handleOtpSubmit START ---');
     setErrorMessage('');
     setLoading(true);
+
     if (!authUser) {
-      Toast.show({
-        type: 'error',
-        text1: 'User session not found. Please sign up again.',
-      });
-      console.log('Error: authUser missing.');
+      setLoading(false);
+      Toast.show({ type: 'error', text1: 'User session not found.' });
       return;
     }
 
     const enteredOtp = otp.join('');
     if (enteredOtp.length !== 4) {
-      Toast.show({ type: 'error', text1: 'Please enter a valid 4-digit OTP.' });
-      console.log('Error: Invalid OTP length.', enteredOtp);
+      setLoading(false);
+      Toast.show({ type: 'error', text1: 'Enter a valid 4-digit OTP.' });
       return;
     }
-
-    setLoading(true);
 
     const body = {
       CUSTID_DIGITAL_GID: authUser.CUSTID_DIGITAL_GID,
@@ -101,170 +108,111 @@ const OtpScreen: React.FC = () => {
       OTP: enteredOtp,
     };
 
-    console.log('[OTPVerifyOnSignupAPI] Request Body:', body);
-
-    OTPVerifyOnSignupAPI(body, (response: any) => {
-      setLoading(false);
-      console.log('[OTPVerifyOnSignupAPI] Raw Response:', response);
-
-      if (!response || !response.success) {
-        console.log('Error: API returned unsuccessful response.');
-        Toast.show({
-          type: 'error',
-          text1: response?.errorMessage || 'Unknown server error',
+    try {
+      const response: any = await new Promise((resolve, reject) => {
+        OTPVerifyOnSignupAPI(body, (res: any) => {
+          if (!res?.success) reject(res?.errorMessage);
+          else resolve(res);
         });
-        return;
-      }
-
-      if (!response.responseBody) {
-        console.log('Error: Missing responseBody in response.');
-        Toast.show({ type: 'error', text1: 'Invalid server response format.' });
-        return;
-      }
-
-      console.log(
-        '[OTPVerifyOnSignupAPI] Parsed XML root:',
-        response.responseBody.name,
-      );
-      console.log(
-        '[OTPVerifyOnSignupAPI] Parsed children:',
-        response.responseBody.children,
-      );
-
-      // Extract the main result node
-      let resultNode = null;
-
-      if (response.responseBody.name === 'OTPVerifyOnSignupResponse') {
-        resultNode = response.responseBody.children?.find(
-          (c: any) => c.name === 'OTPVerifyOnSignupResult',
-        );
-      } else if (response.responseBody.name === 'OTPVerifyOnSignupResult') {
-        resultNode = response.responseBody;
-      }
-
-      if (!resultNode) {
-        console.log('Error: Could not find OTPVerifyOnSignupResult node.');
-        console.log('Response body structure:', response.responseBody);
-        Toast.show({
-          type: 'error',
-          text1: 'Invalid XML response structure.',
-        });
-        return;
-      }
-
-      console.log('[OTPVerifyOnSignupAPI] Found resultNode:', resultNode);
-
-      // Convert XML children array to key-value object
-      const result: Record<string, string> = {};
-      if (Array.isArray(resultNode.children)) {
-        resultNode.children.forEach((child: any) => {
-          if (child.name && typeof child.value !== 'undefined') {
-            result[child.name] = child.value;
-          }
-        });
-      }
-
-      console.log('[OTPVerifyOnSignupAPI] Parsed Key-Value Result:', result);
-
-      const MessageCode = result.MessageCode?.trim() || '';
-      const IsErrorMessage = result.IsErrorMessage?.trim()?.toLowerCase() || '';
-      const Message = result.Message || '';
-      const StatusID = result.StatusID || '';
-      const CUSTID_DIGITAL_GID = result.CUSTID_DIGITAL_GID;
-      const EmailValue = result.Email;
-
-      console.log('Extracted Fields:', {
-        MessageCode,
-        IsErrorMessage,
-        Message,
-        StatusID,
-        CUSTID_DIGITAL_GID,
-        EmailValue,
       });
 
-      // Determine if OTP verification is successful
-      if (MessageCode === '2' && IsErrorMessage === 'false') {
-        console.log('OTP verified successfully.');
+      const resultNode = response?.responseBody?.children?.find(
+        (c: any) => c.name === 'OTPVerifyOnSignupResult',
+      );
 
-        Toast.show({
-          type: 'success',
-          text1: Message || 'OTP verified successfully!',
-        });
-        console.log('Navigating based on StatusID:', StatusID);
+      if (!resultNode) throw new Error('Invalid server response');
+
+      const result: Record<string, string> = {};
+      resultNode.children.forEach((child: any) => {
+        result[child.name] = child.value;
+      });
+
+      const {
+        MessageCode,
+        IsErrorMessage,
+        StatusID,
+        CUSTID_DIGITAL_GID,
+        Email: EmailValue,
+      } = result;
+
+      if (MessageCode === '2' && IsErrorMessage === 'false') {
+        // Prepare session token
+        const userSessionToken = {
+          CUSTID: CUSTID_DIGITAL_GID,
+          Email: EmailValue,
+          StatusID,
+        };
+
+        try {
+          const biometricAvailable = await isBiometricAvailable();
+          if (biometricAvailable) {
+            // Save token immediately
+            await saveBiometricToken(userSessionToken);
+            // Enable biometrics
+            await enableBiometrics();
+
+            // Optional alert just for info
+            Toast.show({
+              type: 'success',
+              text1: 'Biometric Login Enabled',
+              text2: 'You can now sign in faster using Face ID or Fingerprint.',
+            });
+
+            console.log('[OTP] Biometrics enabled successfully');
+          }
+        } catch (e) {
+          console.error('[OTP] Failed to enable biometrics', e);
+        }
+
+        // Log in and navigate
         setIsLoggedIn(true);
+        setLoading(false);
         switch (StatusID) {
           case '2':
-            Toast.show({ text1: 'Onboarding pending.', visibilityTime: 2000 });
-            setTimeout(() => {
-              navigation.navigate('PersonalInformation', {
-                statusId: StatusID,
-              });
-            }, 2000);
+            navigation.navigate('PersonalInformation', { statusId: StatusID });
             break;
           case '3':
           case '5':
             navigation.navigate('Dashboard', { statusId: StatusID });
             break;
           case '4':
-            Toast.show({ text1: 'KYC pending.', visibilityTime: 2000 });
-            setTimeout(
-              () =>
-                navigation.navigate('KycProcessScreen', { statusId: StatusID }),
-              2000,
-            );
+            navigation.navigate('KycProcessScreen', { statusId: StatusID });
             break;
           default:
             Toast.show({
               type: 'error',
-              text1: 'Unexpected status. Try again.',
+              text1: 'Unexpected status. Please try again.',
             });
         }
       } else {
-        console.log('OTP verification failed. Full result object:', result);
-        Toast.show({
-          type: 'error',
-          text1: Message || 'Invalid OTP. Please try again.',
-        });
+        setLoading(false);
+        Toast.show({ type: 'error', text1: 'Invalid OTP' });
       }
-    });
+    } catch (err: any) {
+      setLoading(false);
+      Toast.show({
+        type: 'error',
+        text1: err?.toString() || 'Something went wrong',
+      });
+    }
   };
 
+  /* ───────────────────────────────
+     Resend OTP
+  ─────────────────────────────── */
   const handleResendOTP = () => {
     if (!authUser) return;
-    setErrorMessage('');
-    setLoading(true);
 
+    setLoading(true);
     const body = {
       CUSTID_DIGITAL_GID: authUser.CUSTID_DIGITAL_GID,
-      RecipientName: '',
       RecipientEmail: authUser.Email,
-      Subject: 'One Time Password (OTP)',
-      Title: 'OTP Verification',
-      HTMLBody: '',
-      OTP: '',
     };
 
-    SendOTPVerificationAPI(body, response => {
+    SendOTPVerificationAPI(body, () => {
       setLoading(false);
-      const children = response?.responseBody?.children || [];
-      const extractValue = (name: string) =>
-        children.find((child: any) => child.name === name)?.value || '';
-
-      const messageCode = extractValue('MessageCode');
-      const isErrorMessage = extractValue('IsErrorMessage');
-      const message = extractValue('Message');
-
-      if (messageCode === '2' && isErrorMessage === 'false') {
-        Toast.show({
-          type: 'success',
-          text1: message || 'OTP sent successfully!',
-        });
-        setResendTimer(60);
-      } else {
-        const errorMsg = message || 'Failed to send OTP.';
-        setErrorMessage(errorMsg);
-        Toast.show({ type: 'error', text1: errorMsg });
-      }
+      Toast.show({ type: 'success', text1: 'OTP sent successfully' });
+      setResendTimer(60);
     });
   };
 
@@ -277,32 +225,15 @@ const OtpScreen: React.FC = () => {
     const masked = '*'.repeat(username.length - 3);
     return `${firstChar}${masked}${lastChars}@${domain}`;
   };
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-    if (!/^\d?$/.test(value)) return;
 
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    if (value && index < otp.length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpBackspace = (index: number) => {
-    if (otp[index] === '' && index > 0) {
-      const newOtp = [...otp];
-      newOtp[index - 1] = '';
-      setOtp(newOtp);
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
+  /* ───────────────────────────────
+     UI
+  ─────────────────────────────── */
   return (
     <Background source={require('../../Assets/images/mobilebg.jpg')}>
       {loading && <LoadingSpinner />}
-      <AppHeader showBack={true} onBackPress={() => navigation.goBack()} />
+      <AppHeader showBack onBackPress={() => navigation.goBack()} />
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -310,10 +241,12 @@ const OtpScreen: React.FC = () => {
         >
           <LoginBoxContainer>
             <OtpTitle>Enter OTP</OtpTitle>
+
             <OtpInfo>
               OTP sent to{' '}
               <OtpBold>{authUser?.Email && maskEmail(authUser.Email)}</OtpBold>
             </OtpInfo>
+
             <OtpInputContainer>
               {otp.map((digit, index) => (
                 <OtpInput
@@ -321,24 +254,17 @@ const OtpScreen: React.FC = () => {
                   ref={el => (inputRefs.current[index] = el)}
                   value={digit}
                   onChangeText={val => handleOtpChange(index, val)}
-                  onKeyPress={({ nativeEvent }) => {
-                    if (nativeEvent.key === 'Backspace') {
-                      handleOtpBackspace(index);
-                    }
-                  }}
+                  onKeyPress={({ nativeEvent }) =>
+                    nativeEvent.key === 'Backspace' && handleOtpBackspace(index)
+                  }
                   keyboardType="number-pad"
                   maxLength={1}
-                  placeholder=""
-                  placeholderTextColor="#fff"
-                  scrollEnabled={false}
                   textAlign="center"
                 />
               ))}
             </OtpInputContainer>
 
-            {errorMessage.length > 0 && (
-              <ErrorMessage>{errorMessage}</ErrorMessage>
-            )}
+            {errorMessage ? <ErrorMessage>{errorMessage}</ErrorMessage> : null}
 
             <Button onPress={handleOtpSubmit} disabled={loading}>
               <ButtonText>Submit</ButtonText>

@@ -5,6 +5,8 @@ import {
   KeyboardAvoidingView,
   Keyboard,
   Animated,
+  Text,
+  Image,
 } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
@@ -30,23 +32,18 @@ import {
 } from './style';
 import AnimatedButton from '../../components/StyledButton';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { FaceIDIcon } from '../../Assets/images/SVG';
+import {
+  isBiometricEnabled,
+  tryBiometricLogin,
+} from '../../Utils/biometricAuth';
 
 type RootStackParamList = {
   Login: undefined;
   OtpScreen: undefined;
-  Dashboard: undefined;
-  PersonalInformation: undefined;
-};
-
-type CustomerSignupResponseChild = {
-  name: string;
-  value: string;
-};
-
-type CustomerSignupResponse = {
-  responseBody?: {
-    children?: CustomerSignupResponseChild[];
-  };
+  Dashboard: { statusId: string };
+  PersonalInformation: { statusId: string };
+  KycProcessScreen: { statusId: string }; // add if you navigate there
 };
 
 const emailDomains = [
@@ -59,7 +56,7 @@ const emailDomains = [
 
 const Login: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { saveUserSession } = useContext(AuthContext);
+  const { saveUserSession, setIsLoggedIn } = useContext(AuthContext);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
@@ -67,7 +64,9 @@ const Login: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(40)).current;
+  const [showBiometric, setShowBiometric] = useState(false);
 
+  // Animations
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -82,7 +81,69 @@ const Login: React.FC = () => {
       }),
     ]).start();
   }, []);
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const enabled = await isBiometricEnabled();
+      setShowBiometric(enabled);
+    };
 
+    checkBiometric();
+  }, []);
+
+  // Auto Face ID login
+  // useEffect(() => {
+  //   const checkFaceID = async () => {
+  //     console.log('[FaceID] Checking saved token...');
+  //     const token = await tryFaceIDLogin(); // token should contain { CUSTID, Email, StatusID }
+
+  //     if (token) {
+  //       console.log('[FaceID] Token found, auto login!', token);
+
+  //       // Restore session in AuthContext
+  //       saveUserSession({
+  //         CUSTID_DIGITAL_GID: token.CUSTID,
+  //         Email: token.Email,
+  //         StatusID: token.StatusID,
+  //       });
+  //       console.log('[FaceID] Session restored in AuthContext');
+
+  //       // Set user as logged in
+  //       setIsLoggedIn(true);
+  //       console.log('[FaceID] User marked as logged in');
+
+  //       // Navigate based on StatusID
+  //       switch (token.StatusID) {
+  //         case '2':
+  //           console.log('[FaceID] Navigating to PersonalInformation');
+  //           navigation.navigate('PersonalInformation', {
+  //             statusId: token.StatusID,
+  //           });
+  //           break;
+  //         case '3':
+  //         case '5':
+  //           console.log('[FaceID] Navigating to Dashboard');
+  //           navigation.navigate('Dashboard', { statusId: token.StatusID });
+  //           break;
+  //         case '4':
+  //           console.log('[FaceID] Navigating to KycProcessScreen');
+  //           navigation.navigate('KycProcessScreen', {
+  //             statusId: token.StatusID,
+  //           });
+  //           break;
+  //         default:
+  //           console.log('[FaceID] Navigating to Dashboard (default)');
+  //           navigation.navigate('Dashboard', { statusId: token.StatusID });
+  //           break;
+  //       }
+  //     } else {
+  //       console.log('[FaceID] No token found');
+  //     }
+  //   };
+
+  //   checkFaceID();
+  // }, []);
+
+  // Signup API call
   const handleSignup = () => {
     Keyboard.dismiss();
     console.log('Signup started with email:', email);
@@ -118,7 +179,6 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Use getElementsByTagName to directly get CustomerSignupResult
       const resultNode = response.responseBody.getElementsByTagName(
         'CustomerSignupResult',
       )[0];
@@ -131,7 +191,6 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Convert children array to key-value object
       const result: any = {};
       resultNode.children.forEach((child: any) => {
         result[child.name] = child.value;
@@ -177,6 +236,7 @@ const Login: React.FC = () => {
     });
   };
 
+  // Email input change
   const handleEmailChange = (value: string) => {
     setEmail(value);
     const atIndex = value.indexOf('@');
@@ -187,6 +247,98 @@ const Login: React.FC = () => {
       setSuggestions([]);
     }
   };
+
+  // const handleFaceIDLogin = async () => {
+  //   console.log('[FaceID] Button pressed');
+
+  //   const token = await tryBiometricLogin();
+
+  //   if (!token) {
+  //     console.log('[FaceID] No token found or authentication cancelled');
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: 'Biometric login failed or cancelled',
+  //     });
+  //     return;
+  //   }
+
+  //   console.log('[FaceID] Authentication success, token:', token);
+
+  //   if (!token.StatusID) {
+  //     console.warn('[FaceID] StatusID is undefined, cannot navigate properly');
+  //   }
+
+  //   saveUserSession({
+  //     CUST_DISPLAY_ID: token.CUST_DISPLAY_ID || '', // fallback if not in token
+  //     CUSTID_DIGITAL_GID: token.CUSTID,
+  //     Email: token.Email,
+  //     StatusID: token.StatusID,
+  //   });
+
+  //   setIsLoggedIn(true);
+
+  //   switch (token.StatusID) {
+  //     case '2':
+  //       navigation.navigate('PersonalInformation', {
+  //         statusId: token.StatusID,
+  //       });
+  //       break;
+  //     case '3':
+  //     case '5':
+  //       navigation.navigate('Dashboard', { statusId: token.StatusID });
+  //       break;
+  //     case '4':
+  //       navigation.navigate('KycProcessScreen', { statusId: token.StatusID });
+  //       break;
+  //     default:
+  //       navigation.navigate('Dashboard', { statusId: token.StatusID });
+  //       break;
+  //   }
+  // };
+  const handleFaceIDLogin = async () => {
+    console.log('[Biometric] Login pressed');
+
+    const token = await tryBiometricLogin();
+
+    if (!token) {
+      Toast.show({
+        type: 'error',
+        text1: 'Biometric authentication failed',
+      });
+      return;
+    }
+
+    console.log('[Biometric] Login success', token);
+
+    saveUserSession({
+      CUST_DISPLAY_ID: token.CUST_DISPLAY_ID || '',
+      CUSTID_DIGITAL_GID: token.CUSTID,
+      Email: token.Email,
+      StatusID: token.StatusID,
+    });
+
+    setIsLoggedIn(true);
+
+    switch (token.StatusID) {
+      case '2':
+        navigation.navigate('PersonalInformation', {
+          statusId: token.StatusID,
+        });
+        break;
+      case '3':
+      case '5':
+        navigation.navigate('Dashboard', { statusId: token.StatusID });
+        break;
+      case '4':
+        navigation.navigate('KycProcessScreen', {
+          statusId: token.StatusID,
+        });
+        break;
+      default:
+        navigation.navigate('Dashboard', { statusId: token.StatusID });
+    }
+  };
+
   return (
     <Background
       source={require('../../Assets/images/mobilebg.jpg')}
@@ -243,7 +395,29 @@ const Login: React.FC = () => {
           </InputContainer>
 
           {errorMessage ? <ErrorText>{errorMessage}</ErrorText> : null}
+
           <AnimatedButton title="Begin" onPress={handleSignup} />
+          {showBiometric && (
+            <TouchableOpacity
+              onPress={handleFaceIDLogin}
+              activeOpacity={0.7}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 15,
+                shadowColor: '#fff',
+              }}
+            >
+              {/* Icon */}
+              <FaceIDIcon width={24} height={24} style={{ marginRight: 10 }} />
+
+              {/* Text */}
+              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                Login with Face ID
+              </Text>
+            </TouchableOpacity>
+          )}
         </LoginBoxContainer>
       </KeyboardAwareScrollView>
     </Background>

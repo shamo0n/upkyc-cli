@@ -1,298 +1,266 @@
-import styled, { css } from 'styled-components/native';
-
-// -----------------------------------------------------
-// Shared Styles
-// -----------------------------------------------------
-
-const CardShadow = css`
-  shadow-color: #000;
-  shadow-opacity: 0.15;
-  shadow-radius: 8px;
-  shadow-offset: 0px 4px;
-  elevation: 6;
-`;
-
-const ButtonBase = css`
-  padding-vertical: 12px;
-  padding-horizontal: 18px;
-  border-radius: 8px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-`;
-
-// -----------------------------------------------------
-// Main Container
-// -----------------------------------------------------
+import styled from 'styled-components/native';
 
 export const Container = styled.ImageBackground`
   flex: 1;
-  padding: 22px;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.4);
+  padding: 20px;
 `;
 
-// -----------------------------------------------------
-// Profile Card
-// -----------------------------------------------------
-
 export const ProfileBox = styled.View`
-  width: 92%;
-  background-color: #2a4738;
-  border-radius: 16px;
-  padding: 20px;
+  background-color: #355042;
+  border-radius: 12px;
+  padding: 16px;
   align-items: center;
   margin-top: 50px;
-  ${CardShadow};
 `;
 
 export const InfoList = styled.View`
-  width: 100%;
-  margin-top: 18px;
-  gap: 12px;
+  width: 90%;
+  align-self: center;
+  flex-direction: column;
   align-items: center;
+  margin-top: 14px;
+  gap: 8px;
 `;
 
 export const ProfileItem = styled.View`
-  width: 60%;
+  width: 80%;
   flex-direction: row;
-  gap: 14px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 `;
 
 export const ImageBox = styled.View`
-  width: 24px;
-  height: 24px;
-  background-color: #6f8379;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  background-color: #677b70;
+  margin-top: 4px;
+  margin-right: 10px;
+  border-radius: 4px;
+  width: 18px;
+  height: 18px;
 `;
 
 export const ArrowIcon = styled.Image`
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 `;
 
 export const ProfileItemContent = styled.View`
   flex: 1;
   flex-direction: row;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-start;
   flex-shrink: 1;
 `;
 
 export const BoldText = styled.Text`
-  font-weight: 700;
-  color: #f0f5f4;
-  font-size: 14px;
-  margin-right: 6px;
+  font-weight: 600;
+  color: #fff;
 `;
 
 export const ValueText = styled.Text`
   flex-shrink: 1;
   flex-wrap: wrap;
-  color: #e0ece9;
+  color: #fff;
   font-size: 14px;
   line-height: 20px;
 `;
-
 export const InfoText = styled.Text`
-  color: #e5f4ef;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 6px;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 4px;
 `;
-
-// -----------------------------------------------------
-// Actions
-// -----------------------------------------------------
-
 export const IDActions = styled.View`
-  margin-top: 16px;
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
   align-items: center;
 `;
-
 export const IDActionButton = styled.TouchableOpacity`
-  ${ButtonBase}
-  width: 180px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: transparent;
+  border: 1px solid rgba(254, 254, 254, 0.3); /* #FEFEFE4D */
+  padding-vertical: 10px;
+  padding-horizontal: 16px;
+  border-radius: 6px;
+  width: 160px;
+  align-items: center;
+  justify-content: center;
 `;
-
 export const Actions = styled.View`
-  gap: 14px;
+  flex-direction: column;
+  gap: 12px;
   align-items: center;
 `;
 
 export const ActionButton = styled.TouchableOpacity`
-  ${ButtonBase}
-  ${CardShadow}
-  width: 150px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background-color: #2a4738;
+  background-color: #355042;
+  padding-vertical: 10px;
+  padding-horizontal: 16px;
+  border: 1px solid rgba(254, 254, 254, 0.3);
+  border-radius: 6px;
+  width: 130px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  shadow-color: #000;
+  shadow-opacity: 0.2;
+  shadow-radius: 6px;
+  shadow-offset: 0px 4px;
+  elevation: 4;
 `;
-
 export const ButtonText = styled.Text`
   color: #ffffff;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 14px;
   margin-left: 10px;
 `;
 
-// -----------------------------------------------------
-// QR Section
-// -----------------------------------------------------
-
+// Container for QR Section + Actions
 export const QRContainer = styled.View`
   flex-direction: row;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
+  width: 350px;
   justify-content: center;
-  width: 92%;
-  margin-top: 24px;
+  margin-top: 20px;
 `;
 
+// QR Section
 export const QRSection = styled.View`
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  margin: 10px;
 `;
 
 export const QRTitle = styled.Text`
-  font-weight: 700;
-  color: #def7ed;
-  font-size: 17px;
+  font-weight: 600;
+  color: #e3fcef;
+  font-size: 16px;
+  margin-bottom: 4px;
 `;
 
 export const QRBox = styled.View`
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
+  padding: 6px;
   background-color: #ffffff;
-  border-radius: 10px;
-  border: 1.5px solid #0f172a;
-  padding: 8px;
+  border: 2px solid #0f172a;
   justify-content: center;
   align-items: center;
-  ${CardShadow};
+  shadow-color: #000;
+  shadow-opacity: 0.2;
+  shadow-radius: 6px;
+  shadow-offset: 0px 6px;
 `;
 
+// Actions Section
 export const QRActions = styled.View`
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   align-items: center;
 `;
 
-// -----------------------------------------------------
-// Modal (Modernized)
-// -----------------------------------------------------
-
+// Modal overlay
 export const ModalOverlay = styled.View`
   flex: 1;
+  background-color: rgba(0, 0, 0, 0.6);
   justify-content: center;
   align-items: center;
-  padding: 28px;
-
-  /* Darker premium overlay */
-  background-color: rgba(0, 0, 0, 0.85);
+  padding: 20px;
 `;
 
+// Modal content box
 export const ModalContent = styled.View`
-  width: 92%;
-  max-width: 460px;
-  height: auto;
-  max-height: 88%; /* prevents overflow, better than fixed 90% */
-
-  border-radius: 20px;
-  padding: 24px 22px;
-
-  /* Premium modern glass / frosted effect */
-  background-color: rgba(48, 72, 60, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
-
-  /* Smooth, natural shadow */
-  ${CardShadow};
-
+  background-color: rgba(74, 102, 85, 0.86); /* #4a6655db */
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  shadow-color: #000;
+  shadow-opacity: 0.2;
+  shadow-radius: 8px;
+  shadow-offset: 0px 8px;
+  elevation: 8;
   position: relative;
 `;
 
-/* Close Button */
+// Close button
 export const CloseBtn = styled.Pressable`
   position: absolute;
-  top: 14px;
-  right: 14px;
-  padding: 10px;
+  top: 8px;
+  right: 8px;
+  background-color: transparent;
   border-radius: 50px;
-
-  /* Soft circular hover area */
+  padding: 4px;
+  justify-content: center;
+  align-items: center;
 `;
 
+// Close button text
 export const CloseText = styled.Text`
-  font-size: 26px;
+  font-size: 34px;
   color: #ffffff;
 `;
 
-// -----------------------------------------------------
-// Images Section
-// -----------------------------------------------------
-
+// Container for images
 export const IDImagesContainer = styled.ScrollView.attrs(() => ({
   contentContainerStyle: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 20,
-    gap: 14,
+    alignSelf: 'center',
   },
 }))``;
 
+// Individual image block
 export const ImageBlock = styled.View`
   width: 45%;
+  margin: 8px;
   align-items: center;
 `;
 
+// ID Image
 export const IDImage = styled.Image`
   width: 100%;
-  border-radius: 12px;
-  border-width: 1px;
-  border-color: #dde2df;
+  max-width: 250px;
   aspect-ratio: 1.5;
+  border-radius: 8px;
+  border-width: 1px;
+  border-color: #ccc;
 `;
-
-// -----------------------------------------------------
-// Compact Download Button
-// -----------------------------------------------------
-
+// Button container
 export const DownloadButton = styled.TouchableOpacity`
-  ${ButtonBase}
-  ${CardShadow}
-
   flex-direction: row;
   align-items: center;
   justify-content: center;
-
-  width: 100px; /* smaller width */
-  padding-vertical: 8px;
-  padding-horizontal: 5px;
-
-  border-radius: 10px;
-
-  background-color: rgba(255, 255, 255, 0.07);
-  border: 0.5px solid rgba(255, 255, 255, 0.14);
-
-  backdrop-filter: blur(4px);
+  background-color: #355042;
+  padding-vertical: 10px;
+  padding-horizontal: 16px;
+  border-radius: 6px;
+  width: 120px;
+  shadow-color: #000;
+  shadow-opacity: 0.2;
+  shadow-radius: 6px;
+  shadow-offset: 0px 4px;
+  elevation: 4;
 `;
 
-export const ButtonIcon = styled.Image`
-  width: 16px; /* smaller icon */
-  height: 16px;
-  margin-right: 6px;
-  resize-mode: contain;
-`;
-
+// Button text
 export const DButtonText = styled.Text`
   color: #ffffff;
-  font-weight: 400;
-  font-size: 8px;
-  letter-spacing: 0.1px;
+  font-weight: 600;
+  font-size: 14px;
+  margin-left: 8px;
+`;
+
+// Button icon
+export const ButtonIcon = styled.Image`
+  width: 20px;
+  height: 20px;
+  resize-mode: contain;
 `;

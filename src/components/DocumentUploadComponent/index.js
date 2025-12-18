@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
-import * as DocumentPicker from 'react-native-document-picker';
+import { pick, types } from '@react-native-documents/picker';
+
 import Toast from 'react-native-toast-message';
 import {
   Container,
@@ -38,8 +39,8 @@ const DocumentUploadComponent = ({ onUpload }) => {
     }
 
     try {
-      const res = await DocumentPicker.pickSingle({
-        type: [DocumentPicker.types.pdf, DocumentPicker.types.images],
+      const res = await pick({
+        type: [types.pdf, types.images],
       });
 
       const name = res.name;
@@ -58,7 +59,8 @@ const DocumentUploadComponent = ({ onUpload }) => {
         });
       }
     } catch (err) {
-      if (!DocumentPicker.isCancel(err)) {
+      // Remove ': any' - JS version
+      if (err.code !== 'DOCUMENT_PICKER_CANCELED') {
         console.error('Document Picker Error:', err);
         Toast.show({
           type: 'error',
